@@ -212,29 +212,20 @@ void Board::setTextAngle(double angle)
 
 void Board::paintEvent(QPaintEvent *event)
 {
-   /* QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.fillRect(event->rect(), Qt::white); // Заливаем фон белым
-
-    //Цикл рисует кэшированные данные
-    for (const auto& data : _bulletinPaintDataList) {
-        // Устанавливаем готовые параметры
-        painter.setFont(data.font);
-        setFontColor(painter, data.color);
-        // Переносим систему координат
-        painter.translate(data.position);
-        painter.rotate(-data.angle);
-
-        // Отрисовываем рамку и текст, используя кэшированный boundRect
-        painter.drawRect(data.boundRect);
-        painter.drawText(data.boundRect, Qt::AlignLeft | Qt::AlignTop | Qt::TextExpandTabs, data.fullText);
-
-        painter.resetTransform(); // Восстанавливаем состояние
-    }*/
     QPainter painter(this);
 
     // Просто копируем кэшированное изображение на виджет
     painter.drawPixmap(0, 0, _cachePixmap);
+}
+
+void Board::resizeEvent(QResizeEvent *event)
+{
+    //вызываем базовую реализацию родительского класса
+    QWidget::resizeEvent(event);
+    //Обновляем наш QPixmap до нового размера и перерисовываем все элементы в него
+    updateCache();
+    // Вызываем paintEvent() для отображения нового кэша на экране
+    update();
 }
 
 void Board::updateCache()
@@ -268,7 +259,6 @@ void Board::updateCache()
 
         painter.resetTransform(); // Восстанавливаем состояние
     }
-    // painter.end() вызывается автоматически при выходе из области видимости
 }
 
 void Board::cacheBulletinPaintData(QJsonObject& obj)

@@ -38,6 +38,7 @@ public:
     void updateCache();
 protected:
     void paintEvent(QPaintEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
 
 private://functions
     void writeDataToFile();
