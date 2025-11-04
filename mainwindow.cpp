@@ -335,22 +335,31 @@ void MainWindow::updateBulletin()
     if (ok) {
         _board->setFontSize(size);
     }
-    
+    else {
+        qWarning()<<"Не удалось получить новый размер для шрифта!";
+    }
     _board->setTextColor(_colorComboBox->currentText());
     int x = _coordXEdit->text().toInt(&ok);
-    int y = 0;
 
-    if(ok) {
-        y = _coordYEdit->text().toInt(&ok);
+    if(!ok) {
+        qWarning()<<"Не удалось получить новую координату x! x=0";
+        x=0;
     }
+    int y = _coordYEdit->text().toInt(&ok);
 
-    if (ok) {
-        _board->setTextCoords(x, y);
+    if(!ok) {
+        qWarning()<<"Не удалось получить новую координату y! y=0";
+        y=0;
     }
+    _board->setTextCoords(x, y);
+
     double angle = _angleEdit->text().toDouble(&ok);
 
     if (ok) {
         _board->setTextAngle(angle);
+    }
+    else {
+        qWarning()<<"Не удалось получить новый угол поворота!";
     }
     _board->writeData();
 }
