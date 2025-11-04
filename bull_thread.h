@@ -50,7 +50,7 @@ public slots:
                 QJsonObject newobj = _board->_jsonObjectArray[_id].toObject();
                 newobj["text"]=text;
                 _board->_jsonObjectArray.replace(_id, newobj);
-                QString fullText = QString("%1: %2").arg(newobj["aythor"].toString()).arg(text);
+                QString fullText = QString("%1: %2").arg(newobj["author"].toString()).arg(text);
 
                 // Расчеты (flags, maxWidth, padding)
                 int flags = Qt::AlignLeft | Qt::AlignTop | Qt::TextExpandTabs;
