@@ -12,7 +12,9 @@ add_executable(bulletinApp
     main.cpp 
     mainwindow.cpp
     board.cpp
+    bull_thread.cpp
     mainwindow.h 
     board.h
+    bull_thread.h
 )
 target_link_libraries(bulletinApp PRIVATE Qt5::Widgets Qt5::Core)

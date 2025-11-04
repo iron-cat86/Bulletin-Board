@@ -36,6 +36,9 @@ public:
     void writeData();
     QJsonObject findByUser(const QString &user);
     void updateCache();
+public://member
+    QList<BulletinPaintData> _bulletinPaintDataList;
+    QJsonArray _jsonObjectArray;
 protected:
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
@@ -49,7 +52,6 @@ private://functions
 
 private://members
     QPixmap _cachePixmap;
-    QList<BulletinPaintData> _bulletinPaintDataList;
     QString _message;
     QString _userName;
     QString _textColor;
@@ -61,7 +63,6 @@ private://members
     //JSON-объекты:
     QJsonDocument _doc;
     QJsonObject _rootJsonObject;
-    QJsonArray _jsonObjectArray;
     QString _fileName;
 };
 

@@ -264,6 +264,7 @@ void MainWindow::setupUi()
     connect(_userNameEdit, &QLineEdit::selectionChanged, this, &MainWindow::blockSendButton);
     connect(this, &MainWindow::cursorFocused, this, &MainWindow::blockSendButton);
     connect(_autoUpdateButton, &QPushButton::clicked, this, &MainWindow::onStartOrStopButton);
+    _pool = new BullThread(_board, 1000, this);
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
@@ -297,6 +298,22 @@ void MainWindow::onStartOrStopButton()
         _bulletinEdit->setEnabled(false);
         _getMyDataButton->setEnabled(false);
         _sendButton->setEnabled(false);
+
+         // Пул из 3 потоков
+        QString amountInSecStr = _editMsgRateEdit->text();
+        int ms = 1000;
+
+        if(amountInSecStr != "") {
+            int amountInSec = amountInSecStr.toInt();
+            ms = 1000/amountInSec;
+        }
+        _pool->setMs(ms);
+        _pool->start();
+
+        // Добавим еще одну задачу через 2 секунды
+        /*QTimer::singleShot(2000, [&pool](){
+            pool.addTask();
+        });*/
     }
     else
     {
@@ -312,6 +329,7 @@ void MainWindow::onStartOrStopButton()
         _editMsgRateEdit->setEnabled(true);
         _bulletinEdit->setEnabled(true);
         _getMyDataButton->setEnabled(true);
+        _pool->stop();
     }
     _autoUpdateButton->update();
 }
