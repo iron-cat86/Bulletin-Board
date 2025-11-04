@@ -212,7 +212,7 @@ void Board::setTextAngle(double angle)
 
 void Board::paintEvent(QPaintEvent *event)
 {
-    QPainter painter(this);
+   /* QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.fillRect(event->rect(), Qt::white); // Заливаем фон белым
 
@@ -230,7 +230,45 @@ void Board::paintEvent(QPaintEvent *event)
         painter.drawText(data.boundRect, Qt::AlignLeft | Qt::AlignTop | Qt::TextExpandTabs, data.fullText);
 
         painter.resetTransform(); // Восстанавливаем состояние
+    }*/
+    QPainter painter(this);
+
+    // Просто копируем кэшированное изображение на виджет
+    painter.drawPixmap(0, 0, _cachePixmap);
+}
+
+void Board::updateCache()
+{
+    // Убедимся, что QPixmap соответствует текущему размеру виджета
+    // Если размер виджета изменился, нужно пересоздать QPixmap
+     if (_cachePixmap.size() != this->size()) {
+        _cachePixmap = QPixmap(this->size());
     }
+
+    // Заливаем фон кэша белым
+    _cachePixmap.fill(Qt::white);
+
+    // Создаем QPainter для рисования НА Pixmap
+    QPainter painter(&_cachePixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    // Цикл рисует кэшированные данные на QPixmap
+    for (const auto& data : _bulletinPaintDataList) {
+        // Устанавливаем готовые параметры
+        painter.setFont(data.font);
+        setFontColor(painter, data.color); // ваша функция установки цвета
+
+        // Переносим систему координат
+        painter.translate(data.position);
+        painter.rotate(-data.angle);
+
+        // Отрисовываем рамку и текст, используя кэшированный boundRect
+        painter.drawRect(data.boundRect);
+        painter.drawText(data.boundRect, Qt::AlignLeft | Qt::AlignTop | Qt::TextExpandTabs, data.fullText);
+
+        painter.resetTransform(); // Восстанавливаем состояние
+    }
+    // painter.end() вызывается автоматически при выходе из области видимости
 }
 
 void Board::cacheBulletinPaintData(QJsonObject& obj)
@@ -273,5 +311,6 @@ void Board::cacheBulletinPaintData(QJsonObject& obj)
         if (!found) {
             _bulletinPaintDataList.append(data);
         }
+        updateCache();
     }
 }

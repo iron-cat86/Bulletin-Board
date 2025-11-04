@@ -35,15 +35,19 @@ public:
     void setTextAngle(double angle);
     void writeData();
     QJsonObject findByUser(const QString &user);
+    void updateCache();
 protected:
     void paintEvent(QPaintEvent *event) override;
 
-private:
+private://functions
     void writeDataToFile();
     void readDataFromFile();
     void setFontColor(QPainter &painter, QString color);
     void setBulletinFromJson(QJsonObject &obj);
     void cacheBulletinPaintData(QJsonObject& obj);
+
+private://members
+    QPixmap _cachePixmap;
     QList<BulletinPaintData> _bulletinPaintDataList;
     QString _message;
     QString _userName;
