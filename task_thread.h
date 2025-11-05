@@ -32,7 +32,7 @@ class TaskThread : public QThread
 
 public:
     // Конструктор принимает указатель на наш пул потоков BullThread и доску объявлений Board
-    explicit TaskThread(BullThread* pool, QMutex* mutex, Board *board, int ms = 1000, QObject *parent = nullptr);
+    explicit TaskThread(QMutex* mutex, Board *board, int ms = 1000, QObject *parent = nullptr);
     ~TaskThread();
 
     void stopThread(); // Метод для безопасной остановки потока
@@ -44,7 +44,7 @@ protected:
 private:
     int         _ms;
     Board      *_board;
-    BullThread *_threadPool; // Указатель на пул потоков
+    //BullThread *_threadPool; // Указатель на пул потоков
     QAtomicInt  _quitFlag;    // Флаг для управления циклом потока
     QMutex     *_mutex;
 };

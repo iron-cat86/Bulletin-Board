@@ -18,8 +18,6 @@
 #include <QDebug>
 #include "task_thread.h"
 
-
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -27,8 +25,6 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    // Статическая функция для перехвата сообщений Qt
-    // Статический указатель на виджет логов
     static QTextEdit *s_logBrowser;
     static void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg);
 signals:
@@ -46,7 +42,6 @@ protected:
 
 private://functionn
     void setupUi();
-    // Метод для безопасного добавления текста в QTextEdit из обработчика
     void appendLogMessage(QtMsgType type, const QString &msg);
 private://members
     QTextEdit   *_logBrowser; //виджет для отображения логов
@@ -67,7 +62,7 @@ private://members
     QPushButton *_getMyDataButton;
     QWidget     *_centralWidget;
     QGridLayout *_mainLayout;
-    BullThread  *_pool;
+    BullThread  *_updateThread;
     TaskThread  *_tasks;
     QMutex       _mutex; // Общий мьютекс для всех потоков
 };

@@ -14,7 +14,6 @@ Board::Board(const QString &fileName, QMutex* mutex, QWidget *parent)
     QPalette palette = this->palette();
     palette.setColor(QPalette::Window, Qt::white);
     this->setPalette(palette);
-    //чтобы палитра применялась автоматически
     this->setAutoFillBackground(true);
     _font.setPointSize(12);
     _font.setFamily("Arial");
@@ -46,6 +45,7 @@ void Board::setBulletinFromJson(QJsonObject &obj)
     QString fullFont=obj["font"].toString();
     QString the_font=QString(fullFont[0]);
     int i=1;
+
     while(i<fullFont.length() && fullFont[i]!=',') {
         the_font += fullFont[i];
         ++i;
@@ -62,7 +62,6 @@ void Board::readDataFromFile()
         file.close();
         _doc = QJsonDocument::fromJson(rawData);
 
-        // Если файл валиден, извлекаем массив сообщений
         if (_doc.isObject() && _doc.object().contains("messages")) {
             _rootJsonObject = _doc.object();
             _jsonObjectArray = _rootJsonObject["messages"].toArray();
@@ -74,7 +73,7 @@ QJsonObject Board::findByUser(const QString &user)
 {
     for (int i = 0; i < _jsonObjectArray.size(); ++i) {
         QJsonObject currentObj = _jsonObjectArray[i].toObject();
-        // Проверяем наличие ключа "author" и совпадение значения с _userName
+
         if (currentObj.contains("author") && currentObj["author"].toString() == user) {
             return currentObj;
         }
@@ -97,23 +96,20 @@ void Board::writeData()
 
     bool foundAndUpdated = false;
 
-    //Парсинг существующего файла
     //Ищем запись по ключу "author" и обновляем ее
     for (int i = 0; i < _jsonObjectArray.size(); ++i) {
         QJsonObject currentObj = _jsonObjectArray[i].toObject();
-        // Проверяем наличие ключа "author" и совпадение значения с _userName
-        if (currentObj.contains("author") && currentObj["author"].toString() == _userName) {
-            // Нашли совпадение! Заменяем весь объект новым (сохраняем user неизменным)
-            QJsonObject updatedObject = newDataObject;
-            updatedObject["author"] = _userName; // Гарантируем, что user не изменится
 
+        if (currentObj.contains("author") && currentObj["author"].toString() == _userName) {
+            QJsonObject updatedObject = newDataObject;
+            updatedObject["author"] = _userName;
             _jsonObjectArray.replace(i, updatedObject);
             foundAndUpdated = true;
             qDebug() << "Найдены и обновлены данные для пользователя: " << _userName;
-            break; // Выходим из цикла после обновления
+            break;
         }
     }
-    //Если не нашли, добавляем новый объект
+
     if (!foundAndUpdated) {
         _jsonObjectArray.append(newDataObject);
         qDebug() << "Добавлен новый пользователь: " << _userName;
@@ -123,14 +119,13 @@ void Board::writeData()
 
 void Board::writeDataToFile()
 {
-    //Запись ОБНОВЛЕННОГО массива обратно в файл ---
     _rootJsonObject["messages"] = _jsonObjectArray;
     _doc.setObject(_rootJsonObject);
 
     QFile file(_fileName);
-    // Открываем файл в режиме перезаписи (WriteOnly | Truncate)
+
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-        file.write(_doc.toJson(QJsonDocument::Indented)); // Записываем ВЕСЬ документ целиком
+        file.write(_doc.toJson(QJsonDocument::Indented));
         file.close();
         qDebug() << "Данные успешно обновлены";
     } else {
@@ -212,60 +207,45 @@ void Board::setTextAngle(double angle)
 void Board::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
-
-    // Просто копируем кэшированное изображение на виджет
     painter.drawPixmap(0, 0, _cachePixmap);
 }
 
 void Board::resizeEvent(QResizeEvent *event)
 {
     _mutex->lock();
-    //вызываем базовую реализацию родительского класса
     QWidget::resizeEvent(event);
-    //Обновляем наш QPixmap до нового размера и перерисовываем все элементы в него
     updateCache();
-    // Вызываем paintEvent() для отображения нового кэша на экране
     update();
     _mutex->unlock();
 }
 
 void Board::updateCache()
 {
-    // Убедимся, что QPixmap соответствует текущему размеру виджета
-    // Если размер виджета изменился, нужно пересоздать QPixmap
      if (_cachePixmap.size() != this->size()) {
         _cachePixmap = QPixmap(this->size());
     }
+   _cachePixmap.fill(Qt::white);
 
-    // Заливаем фон кэша белым
-    _cachePixmap.fill(Qt::white);
-
-    // Создаем QPainter для рисования НА Pixmap
     QPainter painter(&_cachePixmap);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    // Цикл рисует кэшированные данные на QPixmap
     for (const auto& data : _bulletinPaintDataList) {
-        // Устанавливаем готовые параметры
         painter.setFont(data.font);
-        setFontColor(painter, data.color); // ваша функция установки цвета
+        setFontColor(painter, data.color);
 
-        // Переносим систему координат
         painter.translate(data.position);
         painter.rotate(-data.angle);
-
-        // Отрисовываем рамку и текст, используя кэшированный boundRect
         painter.drawRect(data.boundRect);
         painter.drawText(data.boundRect, Qt::AlignLeft | Qt::AlignTop | Qt::TextExpandTabs, data.fullText);
 
-        painter.resetTransform(); // Восстанавливаем состояние
+        painter.resetTransform();
     }
 }
 
 void Board::cacheBulletinPaintData(QJsonObject& obj)
 {
     _mutex->lock();
-    setBulletinFromJson(obj); // Обновляет _userName, _message, _x, _y, _angle, _font
+    setBulletinFromJson(obj);
 
     if(_userName != "" && _message != "") {
         QString fullText = QString("%1: %2").arg(_userName).arg(_message);
@@ -279,7 +259,6 @@ void Board::cacheBulletinPaintData(QJsonObject& obj)
         QRect boundRect = fm.boundingRect(0, 0, maxWidth, 10000, flags, fullText);
         boundRect.adjust(-padding, -padding, padding, padding);
 
-        // Сохраняем все в структуру
         BulletinPaintData data;
         data.user = _userName;
         data.fullText = fullText;
@@ -290,16 +269,15 @@ void Board::cacheBulletinPaintData(QJsonObject& obj)
         data.angle = _angle;
 
         bool found = false;
-        // Ищем элемент в списке по user
+
         for (int i = 0; i < _bulletinPaintDataList.size(); ++i) {
             if (_bulletinPaintDataList[i].user == _userName) {
-                    // Нашли! Заменяем существующий элемент новым
                _bulletinPaintDataList[i] = data;
                found = true;
-               break; // Выходим из цикла после обновления
+               break;
            }
         }
-        // Если элемент не найден, добавляем его как новый
+
         if (!found) {
             _bulletinPaintDataList.append(data);
         }

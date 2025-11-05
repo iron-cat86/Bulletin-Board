@@ -1,8 +1,8 @@
 #include "task_thread.h"
 #include <QCoreApplication> // Нужен для обработки событий в stopThread()
 
-TaskThread::TaskThread(BullThread *pool, QMutex* mutex, Board *board, int ms, QObject *parent)
-    : QThread(parent), _threadPool(pool), _mutex(mutex), _board(board), _ms(ms)
+TaskThread::TaskThread(QMutex* mutex, Board *board, int ms, QObject *parent)
+    : QThread(parent), _mutex(mutex), _board(board), _ms(ms)
 {
     _quitFlag.storeRelaxed(0);
 }
@@ -26,10 +26,10 @@ void TaskThread::stopThread()
 void TaskThread::run()
 {
     qDebug() << "Авто добавление новых объявлений запускается...";
-
+    _quitFlag.storeRelaxed(0);
     while (_quitFlag.loadRelaxed() == 0) {
         _mutex->lock();
-        int id = _threadPool->getAmountThreads();
+        int id = _board->_bulletinPaintDataList.size();
         _mutex->unlock();
         // Вызываем метод добавления задачи у нашего пула
         QString user = QString::number(id);
@@ -76,10 +76,10 @@ void TaskThread::run()
         _board->_bulletinPaintDataList.append(data);
         _board->updateCache();
         _board->update();
-        // Эта операция потокобезопасна благодаря мьютексу внутри BullThread/Worker
+        /*/ Эта операция потокобезопасна благодаря мьютексу внутри BullThread/Worker
         if (_threadPool) {
             _threadPool->addTask(id);
-        }
+        }*/
         _mutex->unlock();
 
         QThread::msleep(_ms);

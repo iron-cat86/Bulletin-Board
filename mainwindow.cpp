@@ -8,29 +8,26 @@
 #include <QMutexLocker>
 
 const QString SETTINGS_FILE = "bulletins.json";
-// Инициализация статического члена класса.
+
 QTextEdit* MainWindow::s_logBrowser = nullptr;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     setupUi();
-    //Устанавливаем статический указатель на ваш виджет
     s_logBrowser = _logBrowser;
-    //Устанавливаем обработчик сообщений
     qInstallMessageHandler(customMessageHandler);
 }
 
 MainWindow::~MainWindow()
 {
-    //восстанавливаем стандартный обработчик при закрытии
+    _tasks->stopThread();
+    _updateThread->stopThread();
     qInstallMessageHandler(nullptr);
 }
 
-// Статическая функция-обработчик
 void MainWindow::customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
-    // Используем QMutex для потокобезопасности, так как эта функция может вызываться из разных потоков
     static QMutex mutex;
     QMutexLocker locker(&mutex);
 
@@ -50,32 +47,29 @@ void MainWindow::customMessageHandler(QtMsgType type, const QMessageLogContext &
                break;
        }
 
-       // Форматируем сообщение с HTML для цвета и добавляем перевод строки
        QString formattedMsg = QString("<span style=\"color:%1;\">%2</span><br>").arg(color, msg);
 
-       // Используем QMetaObject::invokeMethod для безопасного вызова метода GUI из другого потока
        QMetaObject::invokeMethod(s_logBrowser, "insertHtml",
                                  Qt::QueuedConnection,
                                  Q_ARG(QString, formattedMsg));
     }
 }
 
-// Метод для добавления текста в QTextEdit (должен быть вызван из основного потока GUI)
 void MainWindow::appendLogMessage(QtMsgType type, const QString &msg)
 {
     if (!_logBrowser) return;
 
-    QString color = "black"; // По умолчанию
+    QString color = "black";
     switch (type) {
         case QtDebugMsg:
-            color = "gray"; // debug можно сделать серым
+            color = "gray";
             break;
         case QtWarningMsg:
-            color = "orange"; // Используем orange для предупреждений
+            color = "orange";
             break;
         case QtCriticalMsg:
         case QtFatalMsg:
-            color = "red"; // Красный для ошибок
+            color = "red";
             break;
         default:
             break;
@@ -87,12 +81,9 @@ void MainWindow::appendLogMessage(QtMsgType type, const QString &msg)
     _logBrowser->append(logMessage); // QTextEdit понимает HTML
 }
 
-// Обработчик закрытия окна
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    _mutex.lock();
-    event->accept(); // Подтверждаем закрытие
-    _mutex.unlock();
+    event->accept();
 }
 
 
@@ -105,8 +96,6 @@ void MainWindow::setupUi()
     _board = new Board(SETTINGS_FILE, &_mutex, this);
     // Занимает 3 строки, 2 столбца в макете
     _mainLayout->addWidget(_board, 0, 0, 3, 2); 
-
-    //Создаем два вертикальных контейнера
 
     // Левый контейнер
     QWidget *leftContainer = new QWidget(this);
@@ -123,8 +112,8 @@ void MainWindow::setupUi()
     rightLayout->setContentsMargins(0, 0, 0, 0); // Убираем лишние отступы
 
     // Добавляем контейнеры в основную сетку (во вторую строку)
-    _mainLayout->addWidget(leftContainer, 4, 0, 1, 1); // Строка 4, столбец 0
-    _mainLayout->addWidget(rightContainer, 4, 1, 1, 1); // Строка 4, столбец 1
+    _mainLayout->addWidget(leftContainer, 4, 0, 1, 1);
+    _mainLayout->addWidget(rightContainer, 4, 1, 1, 1);
     // left-1. Поле ввода имени пользователя
     QHBoxLayout *userLayout = new QHBoxLayout();
     userLayout->addWidget(new QLabel("Имя пользователя:", this));
@@ -198,7 +187,7 @@ void MainWindow::setupUi()
     // right-2. Поле ввода количества новых сообщений в секунду.
     QHBoxLayout *newMsgRateLayout = new QHBoxLayout();
     newMsgRateLayout->addWidget(new QLabel("Скорость ввода новых сообщений (1/сек.):", this));
-    _newMsgRateEdit = new QLineEdit("1", this); // Допустим, 1 сообщение в секунду
+    _newMsgRateEdit = new QLineEdit("1", this);
     _newMsgRateEdit->setStyleSheet("background-color: white;");
     newMsgRateLayout->addWidget(_newMsgRateEdit);
     rightLayout->addLayout(newMsgRateLayout);
@@ -206,7 +195,7 @@ void MainWindow::setupUi()
     // right-3. Поле ввода количества изменений существующих сообщений в секунду.
     QHBoxLayout *editMsgRateLayout = new QHBoxLayout();
     editMsgRateLayout->addWidget(new QLabel("Скорость изменений (1/сек.):", this));
-    _editMsgRateEdit = new QLineEdit("1", this); // Допустим, 1 изменения в секунду
+    _editMsgRateEdit = new QLineEdit("1", this);
     _editMsgRateEdit->setStyleSheet("background-color: white;");
     editMsgRateLayout->addWidget(_editMsgRateEdit);
     rightLayout->addLayout(editMsgRateLayout);
@@ -221,10 +210,8 @@ void MainWindow::setupUi()
     // Кнопка займет всю ширину
     rightLayout->addWidget(_getMyDataButton);
 
-    // Чтобы эта область была серой, нужен еще один контейнер для нее.
     QWidget *bottomContainer = new QWidget(this);
     bottomContainer->setStyleSheet("background-color: lightgray;");
-    // Используем QVBoxLayout для вертикального расположения элементов
     QVBoxLayout *bottomLayout = new QVBoxLayout(bottomContainer);
     //bottom-1. Поле ввода текста сообщения
     bottomLayout->addWidget(new QLabel("Сообщение:", this));
@@ -242,31 +229,26 @@ void MainWindow::setupUi()
     _logBrowser->setReadOnly(true); // Только для чтения
     bottomLayout->addWidget(_logBrowser);
 
-    // Добавляем нижний контейнер в основной макет (он займет оставшееся пространство снизу)
     _mainLayout->addWidget(bottomContainer, 5, 0, 1, 2);
     bottomLayout->setStretch(bottomLayout->count() - 1, 1);
 
-    // Добавляем нижний контейнер в основной макет
     _mainLayout->addWidget(bottomContainer, 5, 0, 1, 2);
 
-    //Устанавливаем растяжение для строки с bottomContainer
-    // Строка 0 (board) имеет приоритет 3.
+    //Устанавливаем растяжение
     _mainLayout->setRowStretch(0, 3);
-
-    // Строка 5 (bottomContainer) тоже должна иметь приоритет,
-    // иначе она займет минимально возможное место, не давая _logBrowser расти.
     _mainLayout->setRowStretch(5, 1);
 
     setCentralWidget(_centralWidget);
     setWindowTitle("Bulletin Board");
-    // Соединение сигналов и слотов
+
     connect(_sendButton, &QPushButton::clicked, this, &MainWindow::updateBulletin);
     connect(_getMyDataButton, &QPushButton::clicked, this, &MainWindow::getMyData);
     connect(_userNameEdit, &QLineEdit::selectionChanged, this, &MainWindow::blockSendButton);
     connect(this, &MainWindow::cursorFocused, this, &MainWindow::blockSendButton);
     connect(_autoUpdateButton, &QPushButton::clicked, this, &MainWindow::onStartOrStopButton);
-    _pool = new BullThread(_board, &_mutex, 1000, this);
-    _tasks = new TaskThread(_pool, &_mutex, _board, 1000, this);
+
+    _updateThread = new BullThread(_board, &_mutex, 1000, this);
+    _tasks = new TaskThread(&_mutex, _board, 1000, this);
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
@@ -279,7 +261,6 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
                   <<"Чтобы вернуться к редактированию, нажмите кнопку \"Получить мои данные\"";
         return false;
     }
-    // Для остальных событий вызываем базовый класс
     return QMainWindow::eventFilter(obj, event);
 }
 
@@ -301,7 +282,7 @@ void MainWindow::onStartOrStopButton()
         _getMyDataButton->setEnabled(false);
         _sendButton->setEnabled(false);
 
-         // Пул
+         //Обновление
         QString amountInSecStr = _editMsgRateEdit->text();
         int ms = 1000;
 
@@ -309,8 +290,8 @@ void MainWindow::onStartOrStopButton()
             int amountInSec = amountInSecStr.toInt();
             ms = 1000/amountInSec;
         }
-        _pool->setMs(ms);
-        _pool->start();
+        _updateThread->setMs(ms);
+        _updateThread->start();
         //Добавление
         QString addInSecStr = _newMsgRateEdit->text();
         int newms = 1000;
@@ -337,7 +318,7 @@ void MainWindow::onStartOrStopButton()
         _bulletinEdit->setEnabled(true);
         _getMyDataButton->setEnabled(true);
         _tasks->stopThread();
-        _pool->stop();
+        _updateThread->stopThread();
     }
     _autoUpdateButton->update();
 }
