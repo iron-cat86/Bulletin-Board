@@ -228,6 +228,8 @@ void Board::updateCache()
 
     QPainter painter(&_cachePixmap);
     painter.setRenderHint(QPainter::Antialiasing);
+    painter.setClipRect(this->rect());
+    painter.setClipping(true);
 
     for (const auto& data : _bulletinPaintDataList) {
         painter.setFont(data.font);
