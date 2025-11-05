@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     setupUi();
+    createMenus();
     s_logBrowser = _logBrowser;
     qInstallMessageHandler(customMessageHandler);
 }
@@ -24,6 +25,25 @@ MainWindow::~MainWindow()
     _tasks->stopThread();
     _updateThread->stopThread();
     qInstallMessageHandler(nullptr);
+}
+
+void MainWindow::showHelpMessage()
+{
+    QMessageBox::information(
+        this,
+        "Приложение \"Доска объявлений\"",
+        "Приложение имитирует браузер добавления ваших объявлений\n\n1. Чтобы создать новое объявление, задайте свое уникальное имя пользователя, и все остальные настройки.\nВведите текст сообщения, нажмите кнопку \"Получить данные\" (это необходимо для безопасности, чтобы случайно\nне перезаписать существующее объявление), затем \"Отправить сообщение\"\n2. Чтобы редактировать существующее объявление, повторите действия п. 1, и если объявление существует, кнопка \n\"Отправить сообщение\" станет кнопкой \"Редактировать\", и в полях ввода будут ваши заданные настройки, \nкоторые вы можете изменить.\n3. Чтобы потестировать наше приложение в экстремальном режиме, нажмите кнопку \"Старт авто\": случайным образом будут \nобновляться существующие объявления и добавляться новые. \nВНИМАНИЕ: ваши объявления в этом режиме будут измененены!\nПриятного использования!"
+    );
+}
+
+void MainWindow::createMenus()
+{
+    _aboutAction = new QAction(tr("&О приложении"), this);
+
+    connect(_aboutAction, &QAction::triggered, this, &MainWindow::showHelpMessage);
+
+    _helpMenu = menuBar()->addMenu(tr("&Помощь"));
+    _helpMenu->addAction(_aboutAction);
 }
 
 void MainWindow::customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
@@ -78,7 +98,7 @@ void MainWindow::appendLogMessage(QtMsgType type, const QString &msg)
     QString timestamp = QDateTime::currentDateTime().toString("HH:mm:ss");
     QString logMessage = QString("<span style=\"color:%1;\">[%2] %3</span>").arg(color, timestamp, msg);
 
-    _logBrowser->append(logMessage); // QTextEdit понимает HTML
+    _logBrowser->append(logMessage);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -239,7 +259,7 @@ void MainWindow::setupUi()
     _mainLayout->setRowStretch(5, 1);
 
     setCentralWidget(_centralWidget);
-    setWindowTitle("Bulletin Board");
+    setWindowTitle("Доска объявлений");
 
     connect(_sendButton, &QPushButton::clicked, this, &MainWindow::updateBulletin);
     connect(_getMyDataButton, &QPushButton::clicked, this, &MainWindow::getMyData);

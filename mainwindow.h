@@ -16,6 +16,9 @@
 #include <QCloseEvent>
 #include <QTextEdit>
 #include <QDebug>
+#include <QAction>
+#include <QMenu>
+#include <QMenuBar>
 #include "task_thread.h"
 
 class MainWindow : public QMainWindow
@@ -36,6 +39,7 @@ private slots:
     void getMyData();
     void blockSendButton();
     void onStartOrStopButton();
+    void showHelpMessage();
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -45,9 +49,12 @@ protected:
 private://functionn
     void setupUi();
     void appendLogMessage(QtMsgType type, const QString &msg);
+    void createMenus();
 private://members
     QTextEdit   *_logBrowser; //виджет для отображения логов
     // UI elements
+    QMenu       *_helpMenu;
+    QAction     *_aboutAction;
     Board       *_board;
     QLineEdit   *_userNameEdit;
     QComboBox   *_fontComboBox;
