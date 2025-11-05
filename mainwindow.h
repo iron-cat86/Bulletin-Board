@@ -30,6 +30,7 @@ public:
 signals:
     //пользовательский сигнал
     void cursorFocused();
+    void shown();
 private slots:
     void updateBulletin();
     void getMyData();
@@ -39,6 +40,7 @@ private slots:
 protected:
     void closeEvent(QCloseEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *event) override;
+    void showEvent(QShowEvent *event) override;
 
 private://functionn
     void setupUi();

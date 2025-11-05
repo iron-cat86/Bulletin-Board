@@ -408,3 +408,9 @@ void MainWindow::getMyData()
     _sendButton->setEnabled(true);
     _sendButton->update();
 }
+
+void MainWindow::showEvent(QShowEvent *event)
+{
+    QMainWindow::showEvent(event);
+    emit shown();
+}

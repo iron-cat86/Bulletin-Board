@@ -1,0 +1,8 @@
+<RCC>
+    <qresource>
+        <file>icon.png</file> 
+    </qresource>
+    <qresource>
+        <file>splash.png</file>
+    </qresource>
+</RCC>
