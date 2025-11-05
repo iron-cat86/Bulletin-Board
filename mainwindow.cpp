@@ -90,7 +90,9 @@ void MainWindow::appendLogMessage(QtMsgType type, const QString &msg)
 // Обработчик закрытия окна
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    _mutex.lock();
     event->accept(); // Подтверждаем закрытие
+    _mutex.unlock();
 }
 
 
@@ -100,7 +102,7 @@ void MainWindow::setupUi()
     _mainLayout = new QGridLayout(_centralWidget);
 
     // 0. Область отображения
-    _board = new Board(SETTINGS_FILE, this);
+    _board = new Board(SETTINGS_FILE, &_mutex, this);
     // Занимает 3 строки, 2 столбца в макете
     _mainLayout->addWidget(_board, 0, 0, 3, 2); 
 
@@ -165,7 +167,6 @@ void MainWindow::setupUi()
     _colorComboBox->addItem("Голубой");
     _colorComboBox->addItem("Синий");
     _colorComboBox->addItem("Фиолетовый");
-    _colorComboBox->addItem("Белый");
     _colorComboBox->setStyleSheet("background-color: white;");
     colorLayout->addWidget(_colorComboBox);
     leftLayout->addLayout(colorLayout);
@@ -264,7 +265,8 @@ void MainWindow::setupUi()
     connect(_userNameEdit, &QLineEdit::selectionChanged, this, &MainWindow::blockSendButton);
     connect(this, &MainWindow::cursorFocused, this, &MainWindow::blockSendButton);
     connect(_autoUpdateButton, &QPushButton::clicked, this, &MainWindow::onStartOrStopButton);
-    _pool = new BullThread(_board, 1000, this);
+    _pool = new BullThread(_board, &_mutex, 1000, this);
+    _tasks = new TaskThread(_pool, &_mutex, _board, 1000, this);
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
@@ -299,7 +301,7 @@ void MainWindow::onStartOrStopButton()
         _getMyDataButton->setEnabled(false);
         _sendButton->setEnabled(false);
 
-         // Пул из 3 потоков
+         // Пул
         QString amountInSecStr = _editMsgRateEdit->text();
         int ms = 1000;
 
@@ -309,11 +311,16 @@ void MainWindow::onStartOrStopButton()
         }
         _pool->setMs(ms);
         _pool->start();
+        //Добавление
+        QString addInSecStr = _newMsgRateEdit->text();
+        int newms = 1000;
 
-        // Добавим еще одну задачу через 2 секунды
-        /*QTimer::singleShot(2000, [&pool](){
-            pool.addTask();
-        });*/
+        if(addInSecStr != "") {
+            int addInSec = addInSecStr.toInt();
+            newms = 1000/addInSec;
+        }
+        _tasks->setMs(newms);
+        _tasks->start();
     }
     else
     {
@@ -329,6 +336,7 @@ void MainWindow::onStartOrStopButton()
         _editMsgRateEdit->setEnabled(true);
         _bulletinEdit->setEnabled(true);
         _getMyDataButton->setEnabled(true);
+        _tasks->stopThread();
         _pool->stop();
     }
     _autoUpdateButton->update();

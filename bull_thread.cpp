@@ -1,8 +1,8 @@
 #include "bull_thread.h"
 #include <QCoreApplication>
 
-BullThread::BullThread(Board *board, int ms, QObject *parent)
-    : QObject(parent), _board(board), _ms(ms)
+BullThread::BullThread(Board *board, QMutex* mutex, int ms, QObject *parent)
+    : QObject(parent), _board(board), _mutex(mutex), _ms(ms)
 {
     _numThreads = _board->_bulletinPaintDataList.size();
 }
@@ -14,7 +14,7 @@ BullThread::~BullThread()
 
 void BullThread::start()
 {
-    qDebug() << "Starting thread pool with " << _numThreads << " threads.";
+    qDebug() << "Запускаем авто обновление " << _numThreads << " объявлений.";
     _quitFlag.storeRelaxed(0);
 
     for (int i = 0; i < _numThreads; ++i) {
@@ -24,7 +24,7 @@ void BullThread::start()
 
 void BullThread::stop()
 {
-    qDebug() << "Stopping thread pool gracefully...";
+    qDebug() << "Останавливаем авто обновление...";
 
     _quitFlag.storeRelaxed(1);
 
@@ -40,7 +40,7 @@ void BullThread::stop()
 
     _threads.clear();
     _workers.clear();
-    qDebug() << "Thread pool stopped.";
+    qDebug() << "Авто обновление остановлено.";
 }
 
 // все потоки запускают
@@ -48,10 +48,13 @@ void BullThread::stop()
 // просто запускает еще одну такую же задачу в уже работающем пуле.
 void BullThread::addTask(int id)
 {
-    qDebug() << "Adding one more task (thread). Total:" << _threads.count() + 1;
+    if(id >= _numThreads) {
+        ++_numThreads;
+    }
+    qDebug() << "Добавлено еще одно объявление для обновления. Всего:" << _threads.count() + 1;
 
     QThread *thread = new QThread();
-    Worker *worker = new Worker(&_mutex, &_quitFlag, id, _board, _ms);
+    Worker *worker = new Worker(_mutex, &_quitFlag, id, _board, _ms);
 
     worker->moveToThread(thread);
 

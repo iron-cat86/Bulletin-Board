@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QMutex>
 
 struct BulletinPaintData {
     QString user;
@@ -24,7 +25,7 @@ class Board : public QWidget
     Q_OBJECT
 
 public:
-    explicit Board(const QString &fileName, QWidget *parent = nullptr);
+    explicit Board(const QString &fileName, QMutex* mutex, QWidget *parent = nullptr);
     ~Board();
     void setMessage(const QString &text);
     void setUserName(const QString &name);
@@ -64,6 +65,7 @@ private://members
     QJsonDocument _doc;
     QJsonObject _rootJsonObject;
     QString _fileName;
+    QMutex  *_mutex;
 };
 
 #endif // BOARD_H

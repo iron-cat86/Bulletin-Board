@@ -12,7 +12,6 @@
 #include <QThreadPool>
 #include "board.h"
 
-
 const QList<QString> randomBulletins = {
     "Ищу собутыльника на пятницу.\nВася.\nКвартира 3, тел 6547",
     "Я закодировался!!!\nВася",
@@ -98,22 +97,23 @@ class BullThread : public QObject
     Q_OBJECT
 
 public:
-    explicit BullThread(Board *board, int ms=1000, QObject *parent = nullptr);
+    explicit BullThread(Board *board, QMutex* mutex, int ms=1000, QObject *parent = nullptr);
     ~BullThread();
 
     void start();
     void stop();
     void addTask(int id); // Добавляет задачу в пул
     void setMs(int ms) {_ms = ms;}
+    int getAmountThreads() {return _numThreads;}
 
 private:
     QList<QThread*> _threads;
     QList<Worker*>  _workers;
-    QMutex          _mutex; // Общий мьютекс для всех потоков
     int             _numThreads;
     int             _ms;
     Board          *_board;
     QAtomicInt      _quitFlag;
+    QMutex         *_mutex; // Общий мьютекс для всех потоков
 };
 
 #endif

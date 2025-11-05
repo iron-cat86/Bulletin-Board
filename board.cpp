@@ -6,8 +6,8 @@
 #include <QFontMetrics>
 #include <QFile>
 
-Board::Board(const QString &fileName, QWidget *parent)
-    : QWidget(parent), _x(10), _y(20), _angle(0.0), _fileName(fileName)
+Board::Board(const QString &fileName, QMutex* mutex, QWidget *parent)
+    : QWidget(parent), _x(10), _y(20), _angle(0.0), _fileName(fileName), _mutex(mutex)
 {
     // Задаем минимальный размер и белый фон
     setMinimumSize(400, 300);
@@ -30,7 +30,9 @@ Board::Board(const QString &fileName, QWidget *parent)
 
 Board::~Board()
 {
+    _mutex->lock();
     writeDataToFile();
+    _mutex->unlock();
 }
 
 void Board::setBulletinFromJson(QJsonObject &obj)
@@ -166,10 +168,7 @@ void Board::setTextColor(const QString &textColor)
 void Board::setFontColor(QPainter &painter, QString color)
 {
     QPen pen;
-    if(color == "Белый") {
-        pen = QPen(Qt::white);
-    }
-    else if(color == "Черный") {
+    if(color == "Черный") {
         pen = QPen(Qt::black);
     }
     else if(color == "Красный") {
@@ -220,12 +219,14 @@ void Board::paintEvent(QPaintEvent *event)
 
 void Board::resizeEvent(QResizeEvent *event)
 {
+    _mutex->lock();
     //вызываем базовую реализацию родительского класса
     QWidget::resizeEvent(event);
     //Обновляем наш QPixmap до нового размера и перерисовываем все элементы в него
     updateCache();
     // Вызываем paintEvent() для отображения нового кэша на экране
     update();
+    _mutex->unlock();
 }
 
 void Board::updateCache()
@@ -263,6 +264,7 @@ void Board::updateCache()
 
 void Board::cacheBulletinPaintData(QJsonObject& obj)
 {
+    _mutex->lock();
     setBulletinFromJson(obj); // Обновляет _userName, _message, _x, _y, _angle, _font
 
     if(_userName != "" && _message != "") {
@@ -302,5 +304,7 @@ void Board::cacheBulletinPaintData(QJsonObject& obj)
             _bulletinPaintDataList.append(data);
         }
         updateCache();
+        update();
     }
+    _mutex->unlock();
 }

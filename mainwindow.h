@@ -16,6 +16,7 @@
 #include <QCloseEvent>
 #include <QTextEdit>
 #include <QDebug>
+#include "task_thread.h"
 
 
 
@@ -67,6 +68,8 @@ private://members
     QWidget     *_centralWidget;
     QGridLayout *_mainLayout;
     BullThread  *_pool;
+    TaskThread  *_tasks;
+    QMutex       _mutex; // Общий мьютекс для всех потоков
 };
 
 #endif // MAINWINDOW_H
