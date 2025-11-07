@@ -232,18 +232,22 @@ void Board::updateCache()
     painter.setClipping(true);
 
     for (const auto& data : _bulletinPaintDataList) {
-        painter.setFont(data.font);
-        setFontColor(painter, data.color);
-
-        painter.translate(data.position);
-        painter.rotate(-data.angle);
-        painter.drawRect(data.boundRect);
-        painter.drawText(data.boundRect, Qt::AlignLeft | Qt::AlignTop | Qt::TextExpandTabs, data.fullText);
-
-        painter.resetTransform();
+       drawOneBulletin(data, painter);
     }
 }
 
+void Board::drawOneBulletin(BulletinPaintData data, QPainter &painter)
+{
+    painter.setFont(data.font);
+    setFontColor(painter, data.color);
+
+    painter.translate(data.position);
+    painter.rotate(-data.angle);
+    painter.drawRect(data.boundRect);
+    painter.drawText(data.boundRect, Qt::AlignLeft | Qt::AlignTop | Qt::TextExpandTabs, data.fullText);
+
+    painter.resetTransform();
+}
 void Board::cacheBulletinPaintData(QJsonObject& obj)
 {
     _mutex->lock();

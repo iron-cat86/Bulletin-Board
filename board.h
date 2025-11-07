@@ -37,6 +37,7 @@ public:
     void writeData();
     QJsonObject findByUser(const QString &user);
     void updateCache();
+    void drawOneBulletin(BulletinPaintData data, QPainter &painter);
 public://member
     QList<BulletinPaintData> _bulletinPaintDataList;
     QJsonArray _jsonObjectArray;
