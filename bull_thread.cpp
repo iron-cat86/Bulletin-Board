@@ -1,6 +1,7 @@
 #include "bull_thread.h"
 #include <QCoreApplication>
 #include <QPainter>
+#include <QTimer>
 
 BullThread::BullThread(Board *board, QMutex* mutex, int ms, QObject *parent)
     : QThread(parent), _board(board), _mutex(mutex), _ms(ms)
@@ -19,25 +20,24 @@ void BullThread::run()
 
     while (_quitFlag.loadRelaxed() == 0) {
         _mutex->lock();
-        _board->initNewSplash();
+        QElapsedTimer timer;
+        timer.start();
+        int bulAmount = _board->_jsonObjectArray.size();
 
-        for (int i = 0; i < _board->_jsonObjectArray.size(); ++i) {
+        for (int i = 0; i < bulAmount; ++i) {
             int random_number = QRandomGenerator::global()->bounded(20);
             QString text = randomBulletins[random_number];
             QJsonObject newobj = _board->_jsonObjectArray[i].toObject();
             newobj["text"]=text;
             _board->_jsonObjectArray.replace(i, newobj);
             BulletinPaintData newdata = _board->createNewPaintData(newobj);
-
             bool found = _board->findAndUpdatePaintData(newobj["author"].toString(), newdata);
-            QPainter painter(&_board->_cachePixmap);
-            painter.setRenderHint(QPainter::Antialiasing);
-            painter.setClipRect(_board->rect());
-            painter.setClipping(true);
-            _board->drawOneBulletin(newdata, painter);
         }
-        //_board->updateCache();
-        _board->update();
+        _board->allBulletinsUpdated();
+        qint64 elapsedMs = timer.elapsed();
+        qDebug() << "Обновление "<<_board->_jsonObjectArray.size()<<" объявлений составляет "
+                 << elapsedMs << " милисекунд, что на одно объявление составляет "
+                 << (((double)elapsedMs)/((double)_board->_jsonObjectArray.size()))<<" миллисекунд, задержка между обновлениями: " << _ms << " миллисекунд.";
         _mutex->unlock();
         QThread::msleep(_ms);
     }

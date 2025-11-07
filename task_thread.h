@@ -37,7 +37,6 @@ public:
 
     void stopThread(); // Метод для безопасной остановки потока
     void setMs(int ms) {_ms = ms;}
-
 protected:
     void run() override; // Переопределяем метод QThread::run()
 

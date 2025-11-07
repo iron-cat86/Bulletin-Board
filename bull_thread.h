@@ -44,7 +44,6 @@ public:
     ~BullThread();
     void stopThread();
     void setMs(int ms) {_ms = ms;}
-
 protected:
     void run() override;
 

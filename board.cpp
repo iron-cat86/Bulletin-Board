@@ -285,8 +285,6 @@ bool Board::findAndUpdatePaintData(QString user, BulletinPaintData &data)
 
 void Board::cacheBulletinPaintData(QJsonObject& obj)
 {
-    _mutex->lock();
-
     if(obj["author"].toString() != "" && obj["text"].toString() != "") {
         BulletinPaintData data = createNewPaintData(obj);
 
@@ -302,5 +300,18 @@ void Board::cacheBulletinPaintData(QJsonObject& obj)
         updateCache();
     }
     update();
-    _mutex->unlock();
+}
+
+void Board::allBulletinsUpdated()
+{
+    setNewBulletin(false);
+    updateCache();
+    update();
+}
+
+void Board::oneBulletinAdded()
+{
+    setNewBulletin(true);
+    updateCache();
+    update();
 }

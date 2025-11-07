@@ -1,5 +1,7 @@
 #include "task_thread.h"
-#include <QCoreApplication> // Нужен для обработки событий в stopThread()
+#include <QCoreApplication>
+#include <QPainter>
+#include <QTimer>
 
 TaskThread::TaskThread(QMutex* mutex, Board *board, int ms, QObject *parent)
     : QThread(parent), _mutex(mutex), _board(board), _ms(ms)
@@ -27,11 +29,17 @@ void TaskThread::run()
 {
     qDebug() << "Авто добавление новых объявлений запускается...";
     _quitFlag.storeRelaxed(0);
+
     while (_quitFlag.loadRelaxed() == 0) {
         _mutex->lock();
+        QElapsedTimer timer;
+        timer.start();
+        /*QPainter painter(&_board->_cachePixmap);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setClipRect(_board->rect());
+        painter.setClipping(true);*/
         int id = _board->_bulletinPaintDataList.size();
-        _mutex->unlock();
-        // Вызываем метод добавления задачи у нашего пула
+
         QString user = QString::number(id);
         QString text = randomBulletins[QRandomGenerator::global()->bounded(20)];
         QString t_font = fam_fonts[QRandomGenerator::global()->bounded(5)];
@@ -51,37 +59,14 @@ void TaskThread::run()
         newDataObject["font"] = t_font;
         newDataObject["size"] = size;
 
-        BulletinPaintData data;
-        data.user = user;
-        data.fullText = QString("%1: %2").arg(user).arg(text);
-        data.color = color;
-        // Расчеты (flags, maxWidth, padding)
-        int flags = Qt::AlignLeft | Qt::AlignTop | Qt::TextExpandTabs;
-        int maxWidth = 200;
-        int padding = 5;
+        BulletinPaintData data = _board->createNewPaintData(newDataObject);
 
-        QFont font;
-        font.setFamily(t_font);
-        font.setPointSize(size);
-        data.font = font;
-        QFontMetrics fm(font);
-        QRect boundRect = fm.boundingRect(0, 0, maxWidth, 10000, flags, data.fullText);
-        boundRect.adjust(-padding, -padding, padding, padding);
-        data.boundRect = boundRect;
-        data.position = QPointF(x, y);
-        data.angle = angle;
-
-        _mutex->lock();
         _board->_jsonObjectArray.append(newDataObject);
         _board->_bulletinPaintDataList.append(data);
-        _board->updateCache();
-        _board->update();
-        /*/ Эта операция потокобезопасна благодаря мьютексу внутри BullThread/Worker
-        if (_threadPool) {
-            _threadPool->addTask(id);
-        }*/
+        _board->oneBulletinAdded();
+        qint64 elapsedMs = timer.elapsed();
+        qDebug() << "Добавление одного объявления составляет "<< elapsedMs << " милисекунд,  задержка между добавлениями: " << _ms << " миллисекунд.";
         _mutex->unlock();
-
         QThread::msleep(_ms);
     }
     qDebug() << "Авто добавление новых объявлений запущено.";
