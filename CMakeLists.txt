@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(bulletinApp VERSION 1.0)
 
-find_package(Qt5 COMPONENTS Widgets Core Gui REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Core Gui Test REQUIRED)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
@@ -32,12 +32,14 @@ include_directories(${GTEST_INCLUDE_DIRS})
 # Создайте новый файл в вашем проекте, например, tests/bulletins_app_tests.cpp
 set(TEST_SOURCES
     tests/bulletins_app_tests.cpp
+    mainwindow.cpp
     board.cpp
     bull_thread.cpp
     task_thread.cpp
     task_thread.h
     board.h
     bull_thread.h
+    mainwindow.h
 )
 
 # 3. Создаем новый исполняемый файл для тестов
@@ -48,6 +50,10 @@ target_link_libraries(bulletinApp_tests PRIVATE
     ${GTEST_LIBRARIES}
     Qt5::Core
     Qt5::Widgets
+    Qt5::Gui
+    Qt5::Test
+    GTest::gtest
+    GTest::gtest_main
 )
 
 # Включаем автоматический запуск тестов при выполнении 'make test'

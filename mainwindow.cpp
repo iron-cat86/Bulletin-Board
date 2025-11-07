@@ -38,11 +38,12 @@ void MainWindow::showHelpMessage()
 
 void MainWindow::createMenus()
 {
-    _aboutAction = new QAction(tr("&О приложении"), this);
+    _aboutAction = new QAction(tr("О приложении"), this);
 
     connect(_aboutAction, &QAction::triggered, this, &MainWindow::showHelpMessage);
 
-    _helpMenu = menuBar()->addMenu(tr("&Помощь"));
+    _helpMenu = menuBar()->addMenu(tr("Помощь"));
+    _helpMenu->setObjectName("HelpMenu");
     _helpMenu->addAction(_aboutAction);
 }
 
