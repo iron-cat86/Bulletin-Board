@@ -210,14 +210,18 @@ void Board::resizeEvent(QResizeEvent *event)
     update();
     _mutex->unlock();
 }
+void Board::initNewSplash()
+{
+    if (_cachePixmap.size() != this->size()) {
+        _cachePixmap = QPixmap(this->size());
+    }
+    _cachePixmap.fill(Qt::white);
+}
 
 void Board::updateCache()
 {
     if(!_newBulletin) {
-        if (_cachePixmap.size() != this->size()) {
-            _cachePixmap = QPixmap(this->size());
-        }
-        _cachePixmap.fill(Qt::white);
+        initNewSplash();
     }
     QPainter painter(&_cachePixmap);
     painter.setRenderHint(QPainter::Antialiasing);

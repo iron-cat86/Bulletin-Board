@@ -41,9 +41,11 @@ public:
     void setNewBulletin(bool newBulletin) {_newBulletin = newBulletin;}
     BulletinPaintData createNewPaintData(QJsonObject &obj);
     bool findAndUpdatePaintData(QString user, BulletinPaintData &data);
+    void initNewSplash();
 public://member
     QList<BulletinPaintData> _bulletinPaintDataList;
     QJsonArray _jsonObjectArray;
+    QPixmap _cachePixmap;
 protected:
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
@@ -56,7 +58,6 @@ private://functions
     void cacheBulletinPaintData(QJsonObject& obj);
 
 private://members
-    QPixmap _cachePixmap;
     QString _message;
     QString _userName;
     QString _textColor;
