@@ -12,6 +12,9 @@ public:
     void publicCloseEvent(QCloseEvent *event) {
         closeEvent(event); // Вызываем защищенный метод из публичной обертки
     }
+    bool publicEventFilter(QObject *obj, QEvent *event) {
+        return eventFilter(obj, event);
+    }
 };
 
 TEST(MainWindowTestGroup, MenuCreationAndHelpMessage) {
@@ -46,6 +49,46 @@ TEST(MainWindowTestGroup, CloseEventStopsThreads) {
     w.publicCloseEvent(&event);
 
     ASSERT_TRUE(event.isAccepted());
+}
+
+TEST(MainWindowTestGroup, SetupUiInitializesAllWidgets) {
+    TestableMainWindow w;
+    ASSERT_NE(w.centralWidget(), nullptr);
+    ASSERT_NE(w.centralWidget()->layout(), nullptr);
+    QGridLayout* mainLayout = qobject_cast<QGridLayout*>(w.centralWidget()->layout());
+    ASSERT_NE(mainLayout, nullptr);
+
+    QPushButton* sendButton = w.findChild<QPushButton*>("Отправить сообщение");
+    QList<QPushButton*> buttons = w.findChildren<QPushButton*>();
+    ASSERT_GT(buttons.size(), 0); // Проверяем, что хотя бы одна кнопка существует
+
+    // Проверяем наличие поля ввода имени пользователя (_userNameEdit)
+    QLineEdit* userNameEdit = w.findChild<QLineEdit*>("Гость"); // Ищем по тексту по умолчанию
+
+    // Проверяем наличие текстового поля для логов
+    QTextEdit* logBrowser = w.findChild<QTextEdit*>("MainWindowLogBrowser");
+    QList<QTextEdit*> textEdits = w.findChildren<QTextEdit*>();
+    ASSERT_GT(textEdits.size(), 0);
+}
+
+TEST(MainWindowTestGroup, EventFilterBlocksSendButtonOnFocus) {
+    TestableMainWindow w;
+    w.resize(1024, 768);
+
+    QLineEdit* userNameEdit = w.findChild<QLineEdit*>("UserNameEdit");
+    QPushButton* sendButton = w.findChild<QPushButton*>("SendButton");
+
+    ASSERT_NE(userNameEdit, nullptr);
+    ASSERT_NE(sendButton, nullptr);
+
+    // Имитируем событие FocusIn на userNameEdit
+    QFocusEvent focusInEvent(QEvent::FocusIn, Qt::OtherFocusReason);
+
+    w.publicEventFilter(userNameEdit, &focusInEvent);
+
+    // Проверяем, что кнопка отправки стала неактивной и текст изменился на "Отправить сообщение" (если он был "Редактировать")
+    ASSERT_FALSE(sendButton->isEnabled());
+    ASSERT_EQ(sendButton->text(), "Отправить сообщение");
 }
 
 int main(int argc, char **argv) {

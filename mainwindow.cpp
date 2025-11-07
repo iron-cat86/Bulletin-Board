@@ -139,6 +139,7 @@ void MainWindow::setupUi()
     QHBoxLayout *userLayout = new QHBoxLayout();
     userLayout->addWidget(new QLabel("Имя пользователя:", this));
     _userNameEdit = new QLineEdit("Гость", this);
+    _userNameEdit->setObjectName("UserNameEdit");
     _userNameEdit->setStyleSheet("background-color: white;");
     _userNameEdit->installEventFilter(this);
     userLayout->addWidget(_userNameEdit);
@@ -148,6 +149,7 @@ void MainWindow::setupUi()
     QHBoxLayout *fontLayout = new QHBoxLayout();
     fontLayout->addWidget(new QLabel("Шрифт:", this));
     _fontComboBox = new QComboBox(this);
+    _fontComboBox->setObjectName("FontComboBox");
     _fontComboBox->addItem("Arial");
     _fontComboBox->addItem("Times New Roman");
     _fontComboBox->addItem("Courier New");
@@ -161,6 +163,7 @@ void MainWindow::setupUi()
     QHBoxLayout *sizeLayout = new QHBoxLayout();
     sizeLayout->addWidget(new QLabel("Размер шрифта:", this));
     _fontSizeEdit = new QLineEdit("12", this);
+    _fontSizeEdit->setObjectName("FontSizeEdit");
     _fontSizeEdit->setStyleSheet("background-color: white;");
     sizeLayout->addWidget(_fontSizeEdit);
     leftLayout->addLayout(sizeLayout);
@@ -169,6 +172,7 @@ void MainWindow::setupUi()
     QHBoxLayout *colorLayout = new QHBoxLayout();
     colorLayout->addWidget(new QLabel("Цвет шрифта:", this));
     _colorComboBox = new QComboBox(this);
+    _colorComboBox->setObjectName("ColorComboBox");
     _colorComboBox->addItem("Черный");
     _colorComboBox->addItem("Красный");
     _colorComboBox->addItem("Оранжевый");
@@ -185,6 +189,7 @@ void MainWindow::setupUi()
     QHBoxLayout *xLayout = new QHBoxLayout();
     xLayout->addWidget(new QLabel("Координата X:", this));
     _coordXEdit = new QLineEdit("10", this);
+    _coordXEdit->setObjectName("CoordXEdit");
     _coordXEdit->setStyleSheet("background-color: white;");
     xLayout->addWidget(_coordXEdit);
     leftLayout->addLayout(xLayout);
@@ -193,6 +198,7 @@ void MainWindow::setupUi()
     QHBoxLayout *yLayout = new QHBoxLayout();
     yLayout->addWidget(new QLabel("Координата Y:", this));
     _coordYEdit = new QLineEdit("20", this);
+    _coordYEdit->setObjectName("CoordYEdit");
     _coordYEdit->setStyleSheet("background-color: white;");
     yLayout->addWidget(_coordYEdit);
     leftLayout->addLayout(yLayout);
@@ -201,6 +207,7 @@ void MainWindow::setupUi()
     QHBoxLayout *angleLayout = new QHBoxLayout();
     angleLayout->addWidget(new QLabel("Угол наклона (град):", this));
     _angleEdit = new QLineEdit("0", this);
+    _angleEdit->setObjectName("AngleEdit");
     _angleEdit->setStyleSheet("background-color: white;");
     angleLayout->addWidget(_angleEdit);
     rightLayout->addLayout(angleLayout);
@@ -209,6 +216,7 @@ void MainWindow::setupUi()
     QHBoxLayout *newMsgRateLayout = new QHBoxLayout();
     newMsgRateLayout->addWidget(new QLabel("Скорость ввода новых сообщений (1/сек.):", this));
     _newMsgRateEdit = new QLineEdit("1", this);
+    _newMsgRateEdit->setObjectName("NewMsgRateEdit");
     _newMsgRateEdit->setStyleSheet("background-color: white;");
     newMsgRateLayout->addWidget(_newMsgRateEdit);
     rightLayout->addLayout(newMsgRateLayout);
@@ -217,17 +225,20 @@ void MainWindow::setupUi()
     QHBoxLayout *editMsgRateLayout = new QHBoxLayout();
     editMsgRateLayout->addWidget(new QLabel("Скорость изменений (1/сек.):", this));
     _editMsgRateEdit = new QLineEdit("1", this);
+    _editMsgRateEdit->setObjectName("EditMsgRateEdit");
     _editMsgRateEdit->setStyleSheet("background-color: white;");
     editMsgRateLayout->addWidget(_editMsgRateEdit);
     rightLayout->addLayout(editMsgRateLayout);
 
     // right-4. Кнопка запуска/остановки автоматического обновления.
     _autoUpdateButton = new QPushButton("Старт авто", this);
+    _autoUpdateButton->setObjectName("AutoUpdateButton");
     // Кнопка займет всю ширину
     rightLayout->addWidget(_autoUpdateButton);
 
     // right-5. Кнопка "Получить мои данные".
     _getMyDataButton = new QPushButton("Получить мои данные", this);
+    _getMyDataButton->setObjectName("GetMyDataButton");
     // Кнопка займет всю ширину
     rightLayout->addWidget(_getMyDataButton);
 
@@ -237,16 +248,19 @@ void MainWindow::setupUi()
     //bottom-1. Поле ввода текста сообщения
     bottomLayout->addWidget(new QLabel("Сообщение:", this));
     _bulletinEdit = new QTextEdit(this);
+    _bulletinEdit->setObjectName("BulletinEdit");
     _bulletinEdit->setStyleSheet("background-color: white;");
     bottomLayout->addWidget(_bulletinEdit);
 
     // bottom-2. Кнопка «Отправить сообщение»
     _sendButton = new QPushButton("Отправить сообщение", this);
+    _sendButton->setObjectName("SendButton");
     _sendButton->setEnabled(false);
     bottomLayout->addWidget(_sendButton);
 
     //bottom-3. Браузер для логов.
     _logBrowser = new QTextEdit(this);
+    _logBrowser->setObjectName("LogBrowser");
     _logBrowser->setReadOnly(true); // Только для чтения
     bottomLayout->addWidget(_logBrowser);
 
