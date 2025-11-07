@@ -35,10 +35,12 @@ public:
     void setTextCoords(int x, int y);
     void setTextAngle(double angle);
     void writeData();
-    QJsonObject findByUser(const QString &user);
+    QJsonObject findByUser(const QString &user, QJsonObject updatedObj = QJsonObject(), bool replace=false);
     void updateCache();
     void drawOneBulletin(BulletinPaintData data, QPainter &painter);
     void setNewBulletin(bool newBulletin) {_newBulletin = newBulletin;}
+    BulletinPaintData createNewPaintData(QJsonObject &obj);
+    bool findAndUpdatePaintData(QString user, BulletinPaintData &data);
 public://member
     QList<BulletinPaintData> _bulletinPaintDataList;
     QJsonArray _jsonObjectArray;
@@ -63,6 +65,10 @@ private://members
     int _y;
     double _angle;
     bool _newBulletin = false;
+
+    int _flags = Qt::AlignLeft | Qt::AlignTop | Qt::TextExpandTabs;
+    int _maxWidth = 200;
+    int _padding = 5;
 
     //JSON-объекты:
     QJsonDocument _doc;

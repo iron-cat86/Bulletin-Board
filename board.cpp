@@ -24,7 +24,7 @@ Board::Board(const QString &fileName, QMutex* mutex, QWidget *parent)
         QJsonObject currentObj = _jsonObjectArray[i].toObject();
         cacheBulletinPaintData(currentObj);
     }
-    update();
+   // update();
 }
 
 Board::~Board()
@@ -67,12 +67,19 @@ void Board::readDataFromFile()
    }
 }
 
-QJsonObject Board::findByUser(const QString &user)
+QJsonObject Board::findByUser(const QString &user, QJsonObject updatedObj, bool replace)
 {
     for (int i = 0; i < _jsonObjectArray.size(); ++i) {
         QJsonObject currentObj = _jsonObjectArray[i].toObject();
 
         if (currentObj.contains("author") && currentObj["author"].toString() == user) {
+            if(replace) {
+                _jsonObjectArray.replace(i, updatedObj);
+                qDebug() << "Найдены и обновлены данные для пользователя: " << user;
+            }
+            else {
+                qDebug() << "Найдены данные для пользователя: " << user;
+            }
             return currentObj;
         }
     }
@@ -90,29 +97,15 @@ void Board::writeData()
     newDataObject["angle"] = _angle;
     newDataObject["font"] = _font.family();
     newDataObject["size"] = _font.pointSize();
-    cacheBulletinPaintData(newDataObject);
-
-    bool foundAndUpdated = false;
 
     //Ищем запись по ключу "author" и обновляем ее
-    for (int i = 0; i < _jsonObjectArray.size(); ++i) {
-        QJsonObject currentObj = _jsonObjectArray[i].toObject();
+    QJsonObject updatedObject = findByUser(_userName, newDataObject, true);
 
-        if (currentObj.contains("author") && currentObj["author"].toString() == _userName) {
-            QJsonObject updatedObject = newDataObject;
-            updatedObject["author"] = _userName;
-            _jsonObjectArray.replace(i, updatedObject);
-            foundAndUpdated = true;
-            qDebug() << "Найдены и обновлены данные для пользователя: " << _userName;
-            break;
-        }
-    }
-
-    if (!foundAndUpdated) {
+    if(updatedObject["author"].toString() != _userName) {
         _jsonObjectArray.append(newDataObject);
         qDebug() << "Добавлен новый пользователь: " << _userName;
     }
-    update();
+    cacheBulletinPaintData(newDataObject);
 }
 
 void Board::writeDataToFile()
@@ -253,47 +246,57 @@ void Board::drawOneBulletin(BulletinPaintData data, QPainter &painter)
 
     painter.resetTransform();
 }
+
+BulletinPaintData Board::createNewPaintData(QJsonObject &obj)
+{
+    QString fullText = QString("%1: %2").arg(obj["author"].toString()).arg(obj["text"].toString());
+    QFont font;
+    font.setFamily(obj["font"].toString());
+    font.setPointSize(obj["size"].toInt());
+    QFontMetrics fm(font);
+    QRect boundRect = fm.boundingRect(0, 0, _maxWidth, 10000, _flags, fullText);
+    boundRect.adjust(-_padding, -_padding, _padding, _padding);
+
+    BulletinPaintData data;
+    data.user = obj["author"].toString();
+    data.fullText = fullText;
+    data.font = font;
+    data.color = obj["color"].toString();
+    data.boundRect = boundRect;
+    data.position = QPointF(obj["left"].toInt(), obj["top"].toInt());
+    data.angle = obj["angle"].toDouble();
+    return data;
+}
+
+bool Board::findAndUpdatePaintData(QString user, BulletinPaintData &data)
+{
+    for (int i = 0; i < _bulletinPaintDataList.size(); ++i) {
+        if (_bulletinPaintDataList[i].user == user) {
+           _bulletinPaintDataList[i] = data;
+           return true;
+       }
+    }
+    return false;
+}
+
 void Board::cacheBulletinPaintData(QJsonObject& obj)
 {
     _mutex->lock();
-    setBulletinFromJson(obj);
 
-    if(_userName != "" && _message != "") {
-        QString fullText = QString("%1: %2").arg(_userName).arg(_message);
+    if(obj["author"].toString() != "" && obj["text"].toString() != "") {
+        BulletinPaintData data = createNewPaintData(obj);
 
-        // Расчеты (flags, maxWidth, padding)
-        int flags = Qt::AlignLeft | Qt::AlignTop | Qt::TextExpandTabs;
-        int maxWidth = 200;
-        int padding = 5;
-
-        QFontMetrics fm(_font);
-        QRect boundRect = fm.boundingRect(0, 0, maxWidth, 10000, flags, fullText);
-        boundRect.adjust(-padding, -padding, padding, padding);
-
-        BulletinPaintData data;
-        data.user = _userName;
-        data.fullText = fullText;
-        data.font = _font;
-        data.color = _textColor;
-        data.boundRect = boundRect;
-        data.position = QPointF(_x, _y);
-        data.angle = _angle;
-
-        bool found = false;
-
-        for (int i = 0; i < _bulletinPaintDataList.size(); ++i) {
-            if (_bulletinPaintDataList[i].user == _userName) {
-               _bulletinPaintDataList[i] = data;
-               found = true;
-               break;
-           }
-        }
+        bool found = findAndUpdatePaintData(obj["author"].toString(), data);
 
         if (!found) {
+            setNewBulletin(true);
             _bulletinPaintDataList.append(data);
         }
+        else {
+            setNewBulletin(false);
+        }
         updateCache();
-        update();
     }
+    update();
     _mutex->unlock();
 }
