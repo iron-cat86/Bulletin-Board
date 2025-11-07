@@ -301,6 +301,7 @@ void MainWindow::onStartOrStopButton()
         _bulletinEdit->setEnabled(false);
         _getMyDataButton->setEnabled(false);
         _sendButton->setEnabled(false);
+        _board->setNewBulletin(false);
 
          //Обновление
         QString amountInSecStr = _editMsgRateEdit->text();
@@ -348,6 +349,7 @@ void MainWindow::blockSendButton()
     _sendButton->setText("Отправить сообщение");
     _sendButton->setEnabled(false);
     _sendButton->update();
+    _board->setNewBulletin(true);
 }
 
 void MainWindow::updateBulletin()
@@ -420,10 +422,12 @@ void MainWindow::getMyData()
         else qWarning("Данные повреждены! Нет вашего объявления");
 
         _sendButton->setText("Редактировать");
+        _board->setNewBulletin(false);
     }
     else {
         qWarning()<<"Пользователь с именем "<<_userNameEdit->text()<<" не найден!";
         _sendButton->setText("Отправить сообщение");
+        _board->setNewBulletin(true);
     }
     _sendButton->setEnabled(true);
     _sendButton->update();

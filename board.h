@@ -38,6 +38,7 @@ public:
     QJsonObject findByUser(const QString &user);
     void updateCache();
     void drawOneBulletin(BulletinPaintData data, QPainter &painter);
+    void setNewBulletin(bool newBulletin) {_newBulletin = newBulletin;}
 public://member
     QList<BulletinPaintData> _bulletinPaintDataList;
     QJsonArray _jsonObjectArray;
@@ -61,6 +62,7 @@ private://members
     int _x; 
     int _y;
     double _angle;
+    bool _newBulletin = false;
 
     //JSON-объекты:
     QJsonDocument _doc;

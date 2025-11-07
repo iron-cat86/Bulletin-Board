@@ -29,9 +29,7 @@ Board::Board(const QString &fileName, QMutex* mutex, QWidget *parent)
 
 Board::~Board()
 {
-    _mutex->lock();
     writeDataToFile();
-    _mutex->unlock();
 }
 
 void Board::setBulletinFromJson(QJsonObject &obj)
@@ -213,6 +211,7 @@ void Board::paintEvent(QPaintEvent *event)
 void Board::resizeEvent(QResizeEvent *event)
 {
     _mutex->lock();
+    setNewBulletin(false);
     QWidget::resizeEvent(event);
     updateCache();
     update();
@@ -221,18 +220,24 @@ void Board::resizeEvent(QResizeEvent *event)
 
 void Board::updateCache()
 {
-     if (_cachePixmap.size() != this->size()) {
-        _cachePixmap = QPixmap(this->size());
+    if(!_newBulletin) {
+        if (_cachePixmap.size() != this->size()) {
+            _cachePixmap = QPixmap(this->size());
+        }
+        _cachePixmap.fill(Qt::white);
     }
-   _cachePixmap.fill(Qt::white);
-
     QPainter painter(&_cachePixmap);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setClipRect(this->rect());
     painter.setClipping(true);
 
-    for (const auto& data : _bulletinPaintDataList) {
-       drawOneBulletin(data, painter);
+    if(!_newBulletin) {
+        for (const auto& data : _bulletinPaintDataList) {
+           drawOneBulletin(data, painter);
+        }
+    }
+    else {
+        drawOneBulletin(_bulletinPaintDataList.last(), painter);
     }
 }
 
