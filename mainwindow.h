@@ -19,7 +19,6 @@
 #include <QAction>
 #include <QMenu>
 #include <QMenuBar>
-#include "task_thread.h"
 
 class MainWindow : public QMainWindow
 {
@@ -46,7 +45,7 @@ protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
     void showEvent(QShowEvent *event) override;
 
-private://functionn
+private://functions
     void setupUi();
     void appendLogMessage(QtMsgType type, const QString &msg);
     void createMenus();
@@ -71,6 +70,7 @@ private://members
     QPushButton *_getMyDataButton;
     QWidget     *_centralWidget;
     QGridLayout *_mainLayout;
+    // Threads
     BullThread  *_updateThread;
     TaskThread  *_tasks;
     QMutex       _mutex; // Общий мьютекс для всех потоков

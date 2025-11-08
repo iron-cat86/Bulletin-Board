@@ -35,6 +35,25 @@ const QList<QString> randomBulletins = {
     "Мыло ручной работы.\nНатуральное.\nПахнет кактус."
 };
 
+const QList<QString> fam_fonts = {
+    "Arial",
+    "Times New Roman",
+    "Courier New",
+    "Verdana",
+    "Tahoma"
+};
+
+const QList<QString> t_colors = {
+    "Черный",
+    "Красный",
+    "Оранжевый",
+    "Желтый",
+    "Зеленый",
+    "Голубой",
+    "Синий",
+    "Фиолетовый"
+};
+
 class BullThread : public QThread
 {
     Q_OBJECT
@@ -42,16 +61,37 @@ class BullThread : public QThread
 public:
     explicit BullThread(Board *board, QMutex* mutex, int ms=1000, QObject *parent = nullptr);
     ~BullThread();
-    void stopThread();
+    virtual void stopThread();
     void setMs(int ms) {_ms = ms;}
 protected:
-    void run() override;
+    virtual void run();// override;
 
-private:
+//private:
     int        _ms;
     Board     *_board;
     QAtomicInt _quitFlag;
     QMutex    *_mutex;
+};
+
+class UpdateThread : public BullThread
+{
+    Q_OBJECT
+public:
+    UpdateThread(Board *board, QMutex* mutex, int ms=1000, QObject *parent = nullptr);
+    virtual void stopThread() override;
+protected:
+    void run() override;
+};
+
+class TaskThread : public BullThread
+{
+    Q_OBJECT
+public:
+    TaskThread(Board *board, QMutex* mutex, int ms=1000, QObject *parent = nullptr);
+
+    virtual void stopThread() override;
+protected:
+    void run() override;
 };
 
 #endif

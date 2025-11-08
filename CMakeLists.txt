@@ -15,8 +15,8 @@ add_executable(bulletinApp
     mainwindow.cpp
     board.cpp
     bull_thread.cpp
-    task_thread.cpp
-    task_thread.h
+    #task_thread.cpp
+    #task_thread.h
     mainwindow.h 
     board.h
     bull_thread.h
@@ -35,8 +35,8 @@ set(TEST_SOURCES
     mainwindow.cpp
     board.cpp
     bull_thread.cpp
-    task_thread.cpp
-    task_thread.h
+   # task_thread.cpp
+   # task_thread.h
     board.h
     bull_thread.h
     mainwindow.h

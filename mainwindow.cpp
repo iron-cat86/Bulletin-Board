@@ -282,8 +282,8 @@ void MainWindow::setupUi()
     connect(this, &MainWindow::cursorFocused, this, &MainWindow::blockSendButton);
     connect(_autoUpdateButton, &QPushButton::clicked, this, &MainWindow::onStartOrStopButton);
 
-    _updateThread = new BullThread(_board, &_mutex, 1000, this);
-    _tasks = new TaskThread(&_mutex, _board, 1000, this);
+    _updateThread = new UpdateThread(_board, &_mutex, 1000, this);
+    _tasks = new TaskThread(_board, &_mutex, 1000, this);
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)

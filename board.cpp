@@ -9,12 +9,11 @@
 Board::Board(const QString &fileName, QMutex* mutex, QWidget *parent)
     : QWidget(parent), _x(10), _y(20), _angle(0.0), _fileName(fileName), _mutex(mutex)
 {
-    // Задаем минимальный размер и белый фон
     setMinimumSize(400, 300);
     if (_cachePixmap.isNull() || _cachePixmap.size() == QSize(0, 0)) {
-            _cachePixmap = QPixmap(1024, 768);
-            _cachePixmap.fill(Qt::white); // Заполняем белым цветом
-        }
+        _cachePixmap = QPixmap(1024, 768);
+        _cachePixmap.fill(Qt::white);
+    }
     QPalette palette = this->palette();
     palette.setColor(QPalette::Window, Qt::white);
     this->setPalette(palette);
@@ -156,10 +155,9 @@ void Board::setTextColor(const QString &textColor)
 
 void Board::setFontColor(QPainter &painter, QString color)
 {
-    if (!painter.isActive()) { // Проверяем, удалось ли его открыть
-           // qWarning() << "Failed to activate QPainter. Check _cachePixmap size.";
-            return; // Если не активен, выходим
-        }
+    if (!painter.isActive()) {
+        return;
+    }
     QPen pen;
     if(color == "Черный") {
         pen = QPen(Qt::black);
@@ -205,10 +203,9 @@ void Board::setTextAngle(double angle)
 void Board::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
-    if (!painter.isActive()) { // Проверяем, удалось ли его открыть
-           // qWarning() << "Failed to activate QPainter. Check _cachePixmap size.";
-            return; // Если не активен, выходим
-        }
+    if (!painter.isActive()) {
+        return;
+    }
     painter.drawPixmap(0, 0, _cachePixmap);
 }
 
@@ -235,10 +232,9 @@ void Board::updateCache()
         initNewSplash();
     }
     QPainter painter(&_cachePixmap);
-    if (!painter.isActive()) { // Проверяем, удалось ли его открыть
-         //   qWarning() << "Failed to activate QPainter. Check _cachePixmap size.";
-            return; // Если не активен, выходим
-        }
+    if (!painter.isActive()) {
+       return;
+    }
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setClipRect(this->rect());
     painter.setClipping(true);
@@ -255,10 +251,9 @@ void Board::updateCache()
 
 void Board::drawOneBulletin(BulletinPaintData data, QPainter &painter)
 {
-    if (!painter.isActive()) { // Проверяем, удалось ли его открыть
-         //   qWarning() << "Failed to activate QPainter. Check _cachePixmap size.";
-            return; // Если не активен, выходим
-        }
+    if (!painter.isActive()) {
+        return;
+    }
     painter.setFont(data.font);
     setFontColor(painter, data.color);
 
