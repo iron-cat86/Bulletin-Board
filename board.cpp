@@ -231,7 +231,7 @@ void Board::initNewSplash()
     _cachePixmap.fill(Qt::white);
 }
 
-void Board::updateCache()
+void Board::updateCache(bool random_mode)
 {
     if(!_newBulletin) {
         initNewSplash();
@@ -245,8 +245,20 @@ void Board::updateCache()
     painter.setClipping(true);
 
     if(!_newBulletin) {
-        for (const auto& data : _bulletinPaintDataList) {
-           drawOneBulletin(data, painter);
+        for (int i = 0; i < _bulletinPaintDataList.size(); ++i) {
+            BulletinPaintData newdata = _bulletinPaintDataList[i];
+
+            if(random_mode)
+            {
+                int random_number = QRandomGenerator::global()->bounded(20);
+                QString text = randomBulletins[random_number];
+                QJsonObject newobj = _jsonObjectArray[i].toObject();
+                newobj["text"]=text;
+                _jsonObjectArray.replace(i, newobj);
+                newdata = createNewPaintData(newobj);
+                _bulletinPaintDataList.replace(i, newdata);
+            }
+           drawOneBulletin(newdata, painter);
         }
     }
     else {
@@ -321,6 +333,6 @@ void Board::cacheBulletinPaintData(QJsonObject& obj, int i)
 void Board::updateBulletin(bool newBool)
 {
     setNewBulletin(newBool);
-    updateCache();
+    updateCache(true);
     update();
 }

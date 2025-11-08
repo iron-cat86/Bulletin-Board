@@ -24,9 +24,7 @@ BullThread::~BullThread()
 }
 
 void BullThread::run()
-{
-    // Базовый класс ничего не делает, логика в наследниках
-}
+{}
 
 void UpdateThread::run()
 {
@@ -36,17 +34,6 @@ void UpdateThread::run()
         _mutex->lock();
         QElapsedTimer timer;
         timer.start();
-        int bulAmount = _board->_jsonObjectArray.size();
-
-        for (int i = 0; i < bulAmount; ++i) {
-            int random_number = QRandomGenerator::global()->bounded(20);
-            QString text = randomBulletins[random_number];
-            QJsonObject newobj = _board->_jsonObjectArray[i].toObject();
-            newobj["text"]=text;
-            _board->_jsonObjectArray.replace(i, newobj);
-            BulletinPaintData newdata = _board->createNewPaintData(newobj);
-            _board->_bulletinPaintDataList.replace(i, newdata);
-        }
         _board->updateBulletin(false);
         qint64 elapsedMs = timer.elapsed();
         qDebug() << "Обновление "<<_board->_jsonObjectArray.size()<<" объявлений составляет "
