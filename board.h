@@ -42,8 +42,7 @@ public:
     BulletinPaintData createNewPaintData(QJsonObject &obj);
     bool findAndUpdatePaintData(QString user, BulletinPaintData &data);
     void initNewSplash();
-    void allBulletinsUpdated();
-    void oneBulletinAdded();
+    void updateBulletin(bool newBul);
 public://member
     QList<BulletinPaintData> _bulletinPaintDataList;
     QJsonArray _jsonObjectArray;

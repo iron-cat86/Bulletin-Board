@@ -18,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent)
     createMenus();
     s_logBrowser = _logBrowser;
     qInstallMessageHandler(customMessageHandler);
+
+    qDebug()<<"Приложение готово к работе. Добро пожаловать! "<<_board->_jsonObjectArray.size()<<" объявлений загружено из файла "<<SETTINGS_FILE;
 }
 
 MainWindow::~MainWindow()
@@ -405,6 +407,8 @@ void MainWindow::updateBulletin()
         qWarning()<<"Не удалось получить новый угол поворота!";
     }
     _board->writeData();
+    _sendButton->setText("Редактировать");
+    _sendButton->update();
 }
 
 void MainWindow::getMyData()

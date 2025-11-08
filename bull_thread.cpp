@@ -47,7 +47,7 @@ void UpdateThread::run()
             BulletinPaintData newdata = _board->createNewPaintData(newobj);
             bool found = _board->findAndUpdatePaintData(newobj["author"].toString(), newdata);
         }
-        _board->allBulletinsUpdated();
+        _board->updateBulletin(false);
         qint64 elapsedMs = timer.elapsed();
         qDebug() << "Обновление "<<_board->_jsonObjectArray.size()<<" объявлений составляет "
                  << elapsedMs << " милисекунд, что на одно объявление составляет "
@@ -91,7 +91,7 @@ void TaskThread::run()
 
         _board->_jsonObjectArray.append(newDataObject);
         _board->_bulletinPaintDataList.append(data);
-        _board->oneBulletinAdded();
+        _board->updateBulletin(true);
         qint64 elapsedMs = timer.elapsed();
         qDebug() << "Добавление одного объявления составляет "<< elapsedMs << " милисекунд,  задержка между добавлениями: " << _ms << " миллисекунд.";
         _mutex->unlock();

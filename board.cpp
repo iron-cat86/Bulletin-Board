@@ -22,7 +22,6 @@ Board::Board(const QString &fileName, QMutex* mutex, QWidget *parent)
     _font.setFamily("Arial");
 
     readDataFromFile();
-
     for (int i = 0; i < _jsonObjectArray.size(); ++i) {
         QJsonObject currentObj = _jsonObjectArray[i].toObject();
         cacheBulletinPaintData(currentObj);
@@ -316,16 +315,9 @@ void Board::cacheBulletinPaintData(QJsonObject& obj)
     update();
 }
 
-void Board::allBulletinsUpdated()
+void Board::updateBulletin(bool newBool)
 {
-    setNewBulletin(false);
-    updateCache();
-    update();
-}
-
-void Board::oneBulletinAdded()
-{
-    setNewBulletin(true);
+    setNewBulletin(newBool);
     updateCache();
     update();
 }
