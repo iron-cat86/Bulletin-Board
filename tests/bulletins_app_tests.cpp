@@ -17,6 +17,12 @@ public:
     }
 };
 
+class TestableBoard : public Board {
+public:
+    using Board::Board;
+    // ... можно добавить геттеры, если _jsonObjectArray приватный ...
+};
+
 TEST(MainWindowTestGroup, MenuCreationAndHelpMessage) {
     MainWindow w;
 
@@ -89,6 +95,87 @@ TEST(MainWindowTestGroup, EventFilterBlocksSendButtonOnFocus) {
     // Проверяем, что кнопка отправки стала неактивной и текст изменился на "Отправить сообщение" (если он был "Редактировать")
     ASSERT_FALSE(sendButton->isEnabled());
     ASSERT_EQ(sendButton->text(), "Отправить сообщение");
+}
+
+TEST(MainWindowTestGroup, StartStopButtonTogglesAutomation) {
+    TestableMainWindow w;
+    w.resize(1024, 768);
+
+    QPushButton* autoButton = w.findChild<QPushButton*>("AutoUpdateButton");
+    ASSERT_NE(autoButton, nullptr);
+
+    ASSERT_EQ(autoButton->text(), "Старт авто");
+
+}
+
+TEST(BoardTestGroup, ReadDataFromFile) {
+    const QString testFileName = "test_data_read.json";
+    QFile file(testFileName);
+    QFile::remove(testFileName);
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly | QIODevice::Text));
+    QString testJson = R"({
+        "messages": [
+            {"author": "Anna", "text": "Hello", "font": "Arial", "size": 12, "left": 10, "top": 20, "angle": 0.0},
+            {"author": "Bob", "text": "World", "font": "Verdana", "size": 14, "left": 100, "top": 50, "angle": 10.0}
+        ]
+    })";
+    file.write(testJson.toUtf8());
+    file.close();
+
+    QMutex mutex;
+    TestableBoard board(testFileName, &mutex);
+
+    ASSERT_FALSE(board._jsonObjectArray.isEmpty());
+    ASSERT_EQ(board._jsonObjectArray.size(), 2);
+    ASSERT_EQ(board._jsonObjectArray[0].toObject()["author"].toString(), "Anna");
+    ASSERT_EQ(board._jsonObjectArray[0].toObject()["left"].toInt(), 10);
+    ASSERT_EQ(board._bulletinPaintDataList.size(), 2);
+
+    QFile::remove(testFileName);
+}
+
+TEST(BoardTestGroup, FindByUser) {
+    const QString testFileName = "test_data_find.json";
+    QFile file(testFileName);
+    QFile::remove(testFileName);
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly | QIODevice::Text));
+    QString testJson = R"({
+        "messages": [
+            {"author": "Anna", "text": "Hello", "font": "Arial", "size": 12, "left": 10, "top": 20, "angle": 0.0},
+            {"author": "Bob", "text": "World", "font": "Verdana", "size": 14, "left": 100, "top": 50, "angle": 10.0}
+        ]
+    })";
+    file.write(testJson.toUtf8());
+    file.close();
+    QMutex mutex;
+    TestableBoard board(testFileName, &mutex);
+
+    QJsonObject foundObj = board.findByUser("Bob");
+
+    ASSERT_FALSE(foundObj.isEmpty());
+    ASSERT_EQ(foundObj["text"].toString(), "World");
+
+    QJsonObject notFoundObj = board.findByUser("Charlie");
+    ASSERT_TRUE(notFoundObj.isEmpty());
+
+    QFile::remove(testFileName);
+}
+
+TEST(BoardTestGroup, WriteDataAddsNewUser) {
+    const QString testFileName = "test_data_write_new.json";
+    QFile::remove(testFileName);
+    QMutex mutex;
+    TestableBoard board(testFileName, &mutex);
+    int initialSize = board._jsonObjectArray.size();
+
+    board.setUserName("NewUser");
+    board.setMessage("TestData");
+    board.writeData();
+
+    ASSERT_EQ(board._jsonObjectArray.size(), initialSize + 1);
+    ASSERT_EQ(board._jsonObjectArray.last().toObject()["author"].toString(), "NewUser");
+
+    QFile::remove(testFileName);
 }
 
 int main(int argc, char **argv) {
