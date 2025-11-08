@@ -24,7 +24,7 @@ Board::Board(const QString &fileName, QMutex* mutex, QWidget *parent)
     readDataFromFile();
     for (int i = 0; i < _jsonObjectArray.size(); ++i) {
         QJsonObject currentObj = _jsonObjectArray[i].toObject();
-        cacheBulletinPaintData(currentObj);
+        cacheBulletinPaintData(currentObj, i);
     }
 }
 
@@ -68,12 +68,13 @@ void Board::readDataFromFile()
    }
 }
 
-QJsonObject Board::findByUser(const QString &user, QJsonObject updatedObj, bool replace)
+QJsonObject Board::findByUser(const QString &user, int &id, QJsonObject updatedObj, bool replace)
 {
     for (int i = 0; i < _jsonObjectArray.size(); ++i) {
         QJsonObject currentObj = _jsonObjectArray[i].toObject();
 
         if (currentObj.contains("author") && currentObj["author"].toString() == user) {
+            id = i;
             if(replace) {
                 _jsonObjectArray.replace(i, updatedObj);
                 qDebug() << "Найдены и обновлены данные для пользователя: " << user;
@@ -100,13 +101,18 @@ void Board::writeData()
     newDataObject["size"] = _font.pointSize();
 
     //Ищем запись по ключу "author" и обновляем ее
-    QJsonObject updatedObject = findByUser(_userName, newDataObject, true);
+    int id = -1;
+    QJsonObject updatedObject = findByUser(_userName, id, newDataObject, true);
 
-    if(updatedObject["author"].toString() != _userName) {
+    if(id == -1) {
         _jsonObjectArray.append(newDataObject);
+        cacheBulletinPaintData(newDataObject, _jsonObjectArray.size()-1);
         qDebug() << "Добавлен новый пользователь: " << _userName;
     }
-    cacheBulletinPaintData(newDataObject);
+    else {
+        cacheBulletinPaintData(newDataObject, id);
+        qDebug()<< "Обновлены данные для пользователя "<< _userName;
+    }
 }
 
 void Board::writeDataToFile()
@@ -296,22 +302,19 @@ bool Board::findAndUpdatePaintData(QString user, BulletinPaintData &data)
     return false;
 }
 
-void Board::cacheBulletinPaintData(QJsonObject& obj)
+void Board::cacheBulletinPaintData(QJsonObject& obj, int i)
 {
-    if(obj["author"].toString() != "" && obj["text"].toString() != "") {
-        BulletinPaintData data = createNewPaintData(obj);
+    BulletinPaintData data = createNewPaintData(obj);
 
-        bool found = findAndUpdatePaintData(obj["author"].toString(), data);
-
-        if (!found) {
-            setNewBulletin(true);
-            _bulletinPaintDataList.append(data);
-        }
-        else {
-            setNewBulletin(false);
-        }
-        updateCache();
+    if(i != _bulletinPaintDataList.size()) {
+        _bulletinPaintDataList.replace(i, data);
+        setNewBulletin(false);
     }
+    else {
+        _bulletinPaintDataList.append(data);
+        setNewBulletin(true);
+    }
+    updateCache();
     update();
 }
 

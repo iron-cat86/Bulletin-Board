@@ -45,7 +45,7 @@ void UpdateThread::run()
             newobj["text"]=text;
             _board->_jsonObjectArray.replace(i, newobj);
             BulletinPaintData newdata = _board->createNewPaintData(newobj);
-            bool found = _board->findAndUpdatePaintData(newobj["author"].toString(), newdata);
+            _board->_bulletinPaintDataList.replace(i, newdata);
         }
         _board->updateBulletin(false);
         qint64 elapsedMs = timer.elapsed();

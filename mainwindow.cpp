@@ -322,24 +322,36 @@ void MainWindow::onStartOrStopButton()
 
          //Обновление
         QString amountInSecStr = _editMsgRateEdit->text();
-        int ms = 1000;
 
         if(amountInSecStr != "") {
             int amountInSec = amountInSecStr.toInt();
-            ms = 1000/amountInSec;
+
+            if(amountInSec > 0)
+            {
+                int ms = 1000/amountInSec;
+                _updateThread->setMs(ms);
+                _updateThread->start();
+            }
         }
-        _updateThread->setMs(ms);
-        _updateThread->start();
+
         //Добавление
         QString addInSecStr = _newMsgRateEdit->text();
-        int newms = 1000;
 
         if(addInSecStr != "") {
             int addInSec = addInSecStr.toInt();
-            newms = 1000/addInSec;
+
+            if(addInSec > 25) {
+                qWarning()<<"Максимальная частота добавления новых объявлений не должна превышать 25 объявлений в сеекунду!";
+                addInSec = 25;
+                _newMsgRateEdit->setText("25");
+            }
+
+            if(addInSec > 0) {
+                int newms = 1000/addInSec;
+                _tasks->setMs(newms);
+                _tasks->start();
+            }
         }
-        _tasks->setMs(newms);
-        _tasks->start();
     }
     else
     {
@@ -370,45 +382,52 @@ void MainWindow::blockSendButton()
 
 void MainWindow::updateBulletin()
 {
-    _board->setMessage(_bulletinEdit->toPlainText());
-    _board->setUserName(_userNameEdit->text());
-    _board->setFontName(_fontComboBox->currentText());
+    if(_userNameEdit->text() != "" && _bulletinEdit->toPlainText() != "") {
+        _board->setMessage(_bulletinEdit->toPlainText());
+        _board->setUserName(_userNameEdit->text());
+        _board->setFontName(_fontComboBox->currentText());
     
-    bool ok;
-    int size = _fontSizeEdit->text().toInt(&ok);
+        bool ok;
+        int size = _fontSizeEdit->text().toInt(&ok);
     
-    if (ok) {
-        _board->setFontSize(size);
+        if (ok) {
+            _board->setFontSize(size);
+        }
+        else {
+            qWarning()<<"Не удалось получить новый размер для шрифта!";
+            size = 12;
+        }
+        _board->setTextColor(_colorComboBox->currentText());
+        int x = _coordXEdit->text().toInt(&ok);
+
+        if(!ok) {
+            qWarning()<<"Не удалось получить новую координату x! x=0";
+            x=0;
+        }
+        int y = _coordYEdit->text().toInt(&ok);
+
+        if(!ok) {
+            qWarning()<<"Не удалось получить новую координату y! y=0";
+            y=0;
+        }
+        _board->setTextCoords(x, y);
+
+        double angle = _angleEdit->text().toDouble(&ok);
+
+        if (ok) {
+            _board->setTextAngle(angle);
+        }
+        else {
+            qWarning()<<"Не удалось получить новый угол поворота!";
+            angle = 0.;
+        }
+        _board->writeData();
+        _sendButton->setText("Редактировать");
+        _sendButton->update();
     }
     else {
-        qWarning()<<"Не удалось получить новый размер для шрифта!";
+        qErrnoWarning("Введите не пустое имя пользователя и не пустое объявление! Данные не определены.");
     }
-    _board->setTextColor(_colorComboBox->currentText());
-    int x = _coordXEdit->text().toInt(&ok);
-
-    if(!ok) {
-        qWarning()<<"Не удалось получить новую координату x! x=0";
-        x=0;
-    }
-    int y = _coordYEdit->text().toInt(&ok);
-
-    if(!ok) {
-        qWarning()<<"Не удалось получить новую координату y! y=0";
-        y=0;
-    }
-    _board->setTextCoords(x, y);
-
-    double angle = _angleEdit->text().toDouble(&ok);
-
-    if (ok) {
-        _board->setTextAngle(angle);
-    }
-    else {
-        qWarning()<<"Не удалось получить новый угол поворота!";
-    }
-    _board->writeData();
-    _sendButton->setText("Редактировать");
-    _sendButton->update();
 }
 
 void MainWindow::getMyData()
@@ -418,26 +437,33 @@ void MainWindow::getMyData()
         qErrnoWarning("Введите имя пользователя!");
         return;
     }
+    int id = -1;
+    QJsonObject findObj = _board->findByUser(_userNameEdit->text(), id);
 
-    QJsonObject findObj = _board->findByUser(_userNameEdit->text());
-
-    if(findObj.contains("author") && findObj["author"].toString() != "")
+    if(id != -1)
     {
-        _userNameEdit->setText(findObj["author"].toString());
+        qDebug()<<"Найден пользователь с именем "<<_userNameEdit->text();
+
         if(findObj.contains("font")) _fontComboBox->setCurrentText(findObj["font"].toString());
-        else qWarning("Данные повреждены! Нет значения для шрифта");
+        else qWarning("Данные повреждены или не полные! Нет значения для шрифта");
+
         if(findObj.contains("color")) _colorComboBox->setCurrentText(findObj["color"].toString());
-        else qWarning("Данные повреждены! Нет значения для цвета");
+        else qWarning("Данные повреждены или не полные! Нет значения для цвета");
+
         if(findObj.contains("size")) _fontSizeEdit->setText(QString::number(findObj["size"].toInt()));
-        else qWarning("Данные повреждены! Нет значения для размера");
+        else qWarning("Данные повреждены или не полные! Нет значения для размера");
+
         if(findObj.contains("left")) _coordXEdit->setText(QString::number(findObj["left"].toInt()));
-        else qWarning("Данные повреждены! Нет значения для x-координаты");
+        else qWarning("Данные повреждены или не полные! Нет значения для x-координаты");
+
         if(findObj.contains("top")) _coordYEdit->setText(QString::number(findObj["top"].toInt()));
-        else qWarning("Данные повреждены! Нет значения для y-координаты");
+        else qWarning("Данные повреждены или не полные! Нет значения для y-координаты");
+
         if(findObj.contains("angle")) _angleEdit->setText(QString::number(findObj["angle"].toDouble()));
-        else qWarning("Данные повреждены! Нет значения для угла поворота");
+        else qWarning("Данные повреждены или не полные! Нет значения для угла поворота");
+
         if(findObj.contains("text")) _bulletinEdit->setText(findObj["text"].toString());
-        else qWarning("Данные повреждены! Нет вашего объявления");
+        else qWarning("Данные повреждены или не полные! Нет вашего объявления");
 
         _sendButton->setText("Редактировать");
     }

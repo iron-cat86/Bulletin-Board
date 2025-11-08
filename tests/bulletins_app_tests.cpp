@@ -157,14 +157,17 @@ TEST(BoardTestGroup, FindByUser) {
     file.close();
     QMutex mutex;
     TestableBoard board(testFileName, &mutex);
-
-    QJsonObject foundObj = board.findByUser("Bob");
+    int id = -1;
+    QJsonObject foundObj = board.findByUser("Bob", id);
 
     ASSERT_FALSE(foundObj.isEmpty());
     ASSERT_EQ(foundObj["text"].toString(), "World");
+    ASSERT_EQ(id, 1);
 
-    QJsonObject notFoundObj = board.findByUser("Charlie");
+    id = -1;
+    QJsonObject notFoundObj = board.findByUser("Charlie", id);
     ASSERT_TRUE(notFoundObj.isEmpty());
+    ASSERT_EQ(id, -1);
 
     QFile::remove(testFileName);
 }

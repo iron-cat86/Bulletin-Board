@@ -35,7 +35,7 @@ public:
     void setTextCoords(int x, int y);
     void setTextAngle(double angle);
     void writeData();
-    QJsonObject findByUser(const QString &user, QJsonObject updatedObj = QJsonObject(), bool replace=false);
+    QJsonObject findByUser(const QString &user, int &id, QJsonObject updatedObj = QJsonObject(), bool replace=false);
     void updateCache();
     void drawOneBulletin(BulletinPaintData data, QPainter &painter);
     void setNewBulletin(bool newBulletin) {_newBulletin = newBulletin;}
@@ -56,7 +56,7 @@ private://functions
     void readDataFromFile();
     void setFontColor(QPainter &painter, QString color);
     void setBulletinFromJson(QJsonObject &obj);
-    void cacheBulletinPaintData(QJsonObject& obj);
+    void cacheBulletinPaintData(QJsonObject& obj, int i);
 
 private://members
     QString _message;
