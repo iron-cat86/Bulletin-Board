@@ -116,7 +116,15 @@ TEST(BoardTestGroup, ReadDataFromFile) {
     QString testJson = R"({
         "messages": [
             {"author": "Anna", "text": "Hello", "font": "Arial", "size": 12, "left": 10, "top": 20, "angle": 0.0},
-            {"author": "Bob", "text": "World", "font": "Verdana", "size": 14, "left": 100, "top": 50, "angle": 10.0}
+            {"author": "Bob", "text": "World", "font": "Verdana", "size": 14, "left": 800, "top": 50, "angle": 10.0},
+            {"author": "Joan", "text": "Hi!", "font": "Verdana", "size": 40, "left": 100, "top": 100, "angle": 0.0},
+            {"author": "Jeem", "text": "I'm blue", "font": "Verdana", "size": 50, "left": 700, "top": 1000, "angle": 0.0},
+            {"author": "James", "text": "I near", "font": "Verdana", "size": 30, "left": 100, "top": 20, "angle": 90.0},
+            {"author": "Stiv", "text": "Hear you are?", "font": "Verdana", "size": 25, "left": 600, "top": 25, "angle": 45.0},
+            {"author": "Liv", "text": "I feel you", "font": "Verdana", "size": 60, "left": 500, "top": 10, "angle": 30.0},
+            {"author": "Bred", "text": "I see you", "font": "Verdana", "size": 40, "left": 400, "top": 11, "angle": 20.0},
+            {"author": "Alex", "text": "Good Morning!", "font": "Verdana", "size": 30, "left": 200, "top": 7, "angle": 16.0},
+            {"author": "Stiven", "text": "Good by!", "font": "Verdana", "size": 20, "left": 100, "top": 50, "angle": 15.0}
         ]
     })";
     file.write(testJson.toUtf8());
@@ -126,11 +134,11 @@ TEST(BoardTestGroup, ReadDataFromFile) {
     TestableBoard board(testFileName, &mutex);
 
     ASSERT_FALSE(board._jsonObjectArray.isEmpty());
-    ASSERT_EQ(board._jsonObjectArray.size(), 2);
+    ASSERT_EQ(board._jsonObjectArray.size(), 10);
     ASSERT_EQ(board._jsonObjectArray[0].toObject()["author"].toString(), "Anna");
     ASSERT_EQ(board._jsonObjectArray[0].toObject()["left"].toInt(), 10);
-    ASSERT_EQ(board._bulletinPaintDataList.size(), 2);
-
+    ASSERT_EQ(board._bulletinPaintDataList.size(), 10);
+    ASSERT_EQ(board._jsonObjectArray[7].toObject()["author"].toString(), board._bulletinPaintDataList[7].user);
     QFile::remove(testFileName);
 }
 
