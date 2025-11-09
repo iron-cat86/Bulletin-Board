@@ -334,11 +334,19 @@ void MainWindow::onStartOrStopButton()
         );
 
         if (reply == QMessageBox::Yes) {
+            int addInSec = 0;
+            int amountInSec = 0;
             //Обновление
             QString amountInSecStr = _editMsgRateEdit->text();
 
            if(amountInSecStr != "") {
-                int amountInSec = amountInSecStr.toInt();
+                amountInSec = amountInSecStr.toInt();
+
+                if(amountInSec > 25) {
+                    qWarning()<<"Максимальная частота обновленияобъявлений не должна превышать 25 обновлений в секунду!";
+                    amountInSec = 25;
+                    _editMsgRateEdit->setText("25");
+                }
 
                 if(amountInSec > 0)
                 {
@@ -352,10 +360,10 @@ void MainWindow::onStartOrStopButton()
             QString addInSecStr = _newMsgRateEdit->text();
 
             if(addInSecStr != "") {
-                int addInSec = addInSecStr.toInt();
+                addInSec = addInSecStr.toInt();
 
                 if(addInSec > 25) {
-                    qWarning()<<"Максимальная частота добавления новых объявлений не должна превышать 25 объявлений в сеекунду!";
+                    qWarning()<<"Максимальная частота добавления новых объявлений не должна превышать 25 объявлений в секунду!";
                     addInSec = 25;
                     _newMsgRateEdit->setText("25");
                 }
@@ -382,6 +390,13 @@ void MainWindow::onStartOrStopButton()
                 _clearButton->setEnabled(false);
                 _sendButton->setEnabled(false);
                 _board->setNewBulletin(false);
+            }
+
+            if(amountInSec <= 0) {
+                QMessageBox::warning(this, "Количество обновлений в секунду равно нулю", "Авто обновление объявлений не запущено. Введите не нулевую частоту!");
+            }
+            if(addInSec <= 0) {
+                QMessageBox::warning(this, "Количество добавлений в секунду равно нулю", "Авто добавление объявлений не запущено. Введите не нулевую частоту!");
             }
         }
         else {
