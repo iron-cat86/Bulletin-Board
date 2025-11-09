@@ -113,6 +113,7 @@ void TaskThread::run()
         newDataObject["angle"] = angle;
         newDataObject["font"] = t_font;
         newDataObject["size"] = size;
+        newDataObject["amountChanges"] = 1;
         BulletinPaintData data = _board->createNewPaintData(newDataObject);
         _board->_jsonObjectArray.append(newDataObject);
         _board->_bulletinPaintDataList.append(data);

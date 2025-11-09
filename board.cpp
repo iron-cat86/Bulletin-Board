@@ -106,13 +106,15 @@ void Board::writeData()
     QJsonObject updatedObject = findByUser(_userName, id, newDataObject);
 
     if(id == -1) {
+        newDataObject["amountChanges"] = 1;
         _jsonObjectArray.append(newDataObject);
         cacheBulletinPaintData(newDataObject, _jsonObjectArray.size()-1);
         QMessageBox::information(this, "Выполнено!", "Добавлен новый пользователь " + _userName);
         qDebug() << "Добавлен новый пользователь: " << _userName;
     }
     else {
-        QString quesion ="Найдены данные с именем пользователя " +_userName + ". Вы уверены, что хотите перезаписать эти данные?";
+        QString quesion ="Найдены данные с именем пользователя " +_userName + ", менял объявление "
+                + QString::number(_jsonObjectArray[id].toObject()["amountChanges"].toInt()) + " раз. Вы уверены, что хотите перезаписать эти данные?";
         QMessageBox::StandardButton reply;
         reply = QMessageBox::question(
             this,
@@ -123,6 +125,8 @@ void Board::writeData()
 
         if (reply == QMessageBox::Yes) {
             qDebug() << "Пользователь нажал ДА.";
+            int amountChanges = _jsonObjectArray[id].toObject()["amountChanges"].toInt()  + 1;
+            newDataObject["amountChanges"] = amountChanges;
             _jsonObjectArray.replace(id, newDataObject);
             cacheBulletinPaintData(newDataObject, id);
             qDebug()<< "Обновлены данные для пользователя "<< _userName;
@@ -309,6 +313,7 @@ void Board::updateCache(bool random_mode)
                 QString text = randomBulletins[random_number];
                 QJsonObject newobj = _jsonObjectArray[i].toObject();
                 newobj["text"]=text;
+                newobj["amountChanges"] = _jsonObjectArray[i].toObject()["amountChanges"].toInt() + 1;
                 _jsonObjectArray.replace(i, newobj);
                 newdata = createNewPaintData(newobj);
                 _bulletinPaintDataList.replace(i, newdata);
