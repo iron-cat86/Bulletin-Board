@@ -37,10 +37,13 @@ class BullThread : public QThread
 public:
     explicit BullThread(Board *board, QMutex* mutex, int ms=1000, QObject *parent = nullptr);
     ~BullThread();
-    virtual void stopThread();
     void setMs(int ms) {_ms = ms;}
+    virtual void stopThread();
+    virtual void giveStatistics();
+signals:
+    void iamstop(const QString &str);
 protected:
-    virtual void run();// override;
+    virtual void run();
     int        _ms;
     Board     *_board;
     QAtomicInt _quitFlag;
@@ -56,7 +59,7 @@ class UpdateThread : public BullThread
     Q_OBJECT
 public:
     UpdateThread(Board *board, QMutex* mutex, int ms=1000, QObject *parent = nullptr);
-    virtual void stopThread() override;
+    void giveStatistics() override;
 protected:
     void run() override;
 private:
@@ -71,8 +74,8 @@ class TaskThread : public BullThread
     Q_OBJECT
 public:
     TaskThread(Board *board, QMutex* mutex, int ms=1000, QObject *parent = nullptr);
+    void giveStatistics() override;
 
-    virtual void stopThread() override;
 protected:
     void run() override;
 };

@@ -165,6 +165,11 @@ void Board::onClear()
     }
 }
 
+void Board::onStopThread(const QString &str)
+{
+    QMessageBox::information(this, "Статистика", str);
+}
+
 void Board::writeDataToFile()
 {
     _rootJsonObject["messages"] = _jsonObjectArray;

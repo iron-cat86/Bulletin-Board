@@ -316,6 +316,8 @@ void MainWindow::setupUi()
     connect(_clearButton, &QPushButton::clicked, _board, &Board::onClear);
     _updateThread = new UpdateThread(_board, &_mutex, 1000, this);
     _tasks = new TaskThread(_board, &_mutex, 1000, this);
+    connect(_updateThread, &BullThread::iamstop, _board, &Board::onStopThread);
+    connect(_tasks, &BullThread::iamstop, _board, &Board::onStopThread);
 }
 
 void MainWindow::onStartOrStopButton()
@@ -385,8 +387,29 @@ void MainWindow::onStartOrStopButton()
         _bulletinEdit->setEnabled(true);
         _clearButton->setEnabled(true);
         _sendButton->setEnabled(true);
-        _tasks->stopThread();
-        _updateThread->stopThread();
+
+        bool needTaskStat = false;
+        bool needUpdateStat = false;
+
+        if(_tasks->isRunning()) {
+            _tasks->stopThread();
+            _tasks->wait();
+            needTaskStat = true;
+        }
+
+        if(_updateThread->isRunning()) {
+            _updateThread->stopThread();
+            _updateThread->wait();
+            needUpdateStat = true;
+        }
+
+        if(needTaskStat) {
+            _tasks->giveStatistics();
+        }
+
+        if(needUpdateStat) {
+            _updateThread->giveStatistics();
+        }
     }
     _autoUpdateButton->update();
 }

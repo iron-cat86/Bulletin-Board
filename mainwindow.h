@@ -30,19 +30,15 @@ public:
     static QTextEdit *s_logBrowser;
     static void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg);
 signals:
-    //пользовательский сигнал
-    //void cursorFocused();
     void shown();
 private slots:
     void updateBulletin();
     void getMyData();
-  //  void blockSendButton();
     void onStartOrStopButton();
     void showHelpMessage();
 
 protected:
     void closeEvent(QCloseEvent *event) override;
- //   bool eventFilter(QObject *obj, QEvent *event) override;
     void showEvent(QShowEvent *event) override;
 
 private://functions
@@ -50,7 +46,7 @@ private://functions
     void appendLogMessage(QtMsgType type, const QString &msg);
     void createMenus();
 private://members
-    QTextEdit   *_logBrowser; //виджет для отображения логов
+    QTextEdit   *_logBrowser;
     // UI elements
     QMenu       *_helpMenu;
     QAction     *_aboutAction;

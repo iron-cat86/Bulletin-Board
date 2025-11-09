@@ -76,6 +76,7 @@ public://member
     QPixmap _cachePixmap;
 public slots:
     void onClear();
+    void onStopThread(const QString &str);
 signals:
     void userDataGetted();
 protected:

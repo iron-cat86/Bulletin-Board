@@ -13,7 +13,6 @@ UpdateThread::UpdateThread(Board *board, QMutex* mutex, int ms, QObject *parent)
     : BullThread(board, mutex, ms, parent)
 {}
 
-// Реализация конструктора TaskThread
 TaskThread::TaskThread(Board *board, QMutex* mutex, int ms, QObject *parent)
     : BullThread(board, mutex, ms, parent)
 {}
@@ -108,15 +107,13 @@ void TaskThread::run()
         newDataObject["angle"] = angle;
         newDataObject["font"] = t_font;
         newDataObject["size"] = size;
-
         BulletinPaintData data = _board->createNewPaintData(newDataObject);
-
         _board->_jsonObjectArray.append(newDataObject);
         _board->_bulletinPaintDataList.append(data);
         _board->updateBulletin(true);
         qint64 elapsedMs = timer.elapsed();
-        //qDebug() << "Добавление одного объявления составляет "<< elapsedMs << " милисекунд,  задержка между добавлениями: " << _ms << " миллисекунд.";
         _mutex->unlock();
+
         ++_amountIteration;
         _averageIterationTime += (double)elapsedMs;
 
@@ -130,35 +127,53 @@ void TaskThread::run()
 
         QThread::msleep(_ms);
     }
-    qDebug() << "Авто добавление новых объявлений запущено.";
 }
 
 void BullThread::stopThread()
 {
     _quitFlag.storeRelaxed(1);
+}
 
-    while(this->isRunning()) {
-        QCoreApplication::processEvents();
-    }
+void BullThread::giveStatistics()
+{
     _averageIterationTime/=(double)_amountIteration;
 }
 
-void UpdateThread::stopThread()
+void UpdateThread::giveStatistics()
 {
     qDebug() << "Останавливаем авто обновление...";
-    BullThread::stopThread();
+
+    BullThread::giveStatistics();
     _averageOneupdateTime/=(double)_amountIteration;
-    qDebug() << "Авто обновление остановлено.\n Обявления обновлялись "<<_amountIteration<<" раз. На данный момент накоплено "<<_board->_bulletinPaintDataList.size()
-             <<" объявлений. (Было "<<_startAmountBulletins<<" объявлений к моменту старта). \nМинимальное время одного обновления составляет "<<_minIterationTime
-             <<" мс, максимальное - "<<_maxIterationTime<<" мс, в среднем одна итерация обновления занимает "<<_averageIterationTime<<" мс. \nНа обновление одного объявления приходится: минимум "
-             <<_minOneupdateTime<<" мс, максимум "<<_maxOneupdateTime<<" мс, и в среднем "<<_averageOneupdateTime<<" мс.\nВремя задержки между итерациями было установлено "<<_ms<<" мс.";
+    QString answ;
+    QTextStream qtext(&answ);
+    qtext<<QString::fromUtf8("Обявления обновлялись ")<<_amountIteration
+         <<QString::fromUtf8(" раз. На данный момент накоплено ")<<_board->_bulletinPaintDataList.size()
+         <<QString::fromUtf8(" объявлений. (Было ")<<_startAmountBulletins
+         <<QString::fromUtf8(" объявлений к моменту старта). \nМинимальное время одного обновления составляет ")<<_minIterationTime
+         <<QString::fromUtf8(" мс, максимальное - ")<<_maxIterationTime
+         <<QString::fromUtf8(" мс, в среднем одна итерация обновления занимает ")<<_averageIterationTime
+         <<QString::fromUtf8(" мс. \nНа обновление одного объявления приходится: минимум ")<<_minOneupdateTime
+         <<QString::fromUtf8(" мс, максимум ")<<_maxOneupdateTime
+         <<QString::fromUtf8(" мс, и в среднем ")<<_averageOneupdateTime
+         <<QString::fromUtf8(" мс.\nВремя задержки между итерациями было установлено ")<<_ms
+         <<QString::fromUtf8(" мс.");
+    emit iamstop(answ);
+    qDebug() << "Авто обновление остановлено.";
 }
 
-void TaskThread::stopThread()
+void TaskThread::giveStatistics()
 {
     qDebug() << "Останавливаем поток, добавляющий объявления...";
-    BullThread::stopThread();
-    qDebug() << "Авто добавление остановлено.\n Добавлено "<<_amountIteration<<" объявлений.\nМинимальное время добавления обновления составляет "<<_minIterationTime
-             <<" мс, максимальное - "<<_maxIterationTime<<" мс, в среднем одна итерация добавления занимает "<<_averageIterationTime<<" мс.\nВремя задержки между итерациями было установлено "
-             <<_ms<<" мс.";
+    BullThread::giveStatistics();
+    QString answ;
+    QTextStream qtext(&answ);
+    qtext<<QString::fromUtf8("Авто добавление остановлено.\n Добавлено ")<<_amountIteration
+         <<QString::fromUtf8(" объявлений.\nМинимальное время добавления обновления составляет ")<<_minIterationTime
+         <<QString::fromUtf8(" мс, максимальное - ")<<_maxIterationTime
+         <<QString::fromUtf8(" мс, в среднем одна итерация добавления занимает ")<<_averageIterationTime
+         <<QString::fromUtf8(" мс.\nВремя задержки между итерациями было установлено ")<<_ms
+         <<QString::fromUtf8(" мс.");
+    emit iamstop(answ);
+    qDebug()<<"Авто добавление остановлено.";
 }
