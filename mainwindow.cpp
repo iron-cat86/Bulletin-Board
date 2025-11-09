@@ -157,7 +157,21 @@ void MainWindow::setupUi()
     _fontComboBox->addItem("Courier New");
     _fontComboBox->addItem("Verdana");
     _fontComboBox->addItem("Tahoma");
-    _fontComboBox->setStyleSheet("background-color: white;");
+    _fontComboBox->setStyleSheet(
+        "QComboBox#ColorComboBox {"
+        "    background-color: white;"
+        "    selection-background-color: lightgray;"
+        "}"
+        "QComboBox#ColorComboBox QAbstractItemView {"
+        "    background-color: white;"
+        "    selection-background-color: #a0a0a0;"
+        "    selection-color: black;"
+        "    color: black;"
+        "}"
+        "QComboBox#ColorComboBox QAbstractItemView::item:hover {"
+        "    background-color: #e0e0e0;"
+        "}"
+    );
     fontLayout->addWidget(_fontComboBox);
     leftLayout->addLayout(fontLayout);
 
@@ -183,7 +197,21 @@ void MainWindow::setupUi()
     _colorComboBox->addItem("Голубой");
     _colorComboBox->addItem("Синий");
     _colorComboBox->addItem("Фиолетовый");
-    _colorComboBox->setStyleSheet("background-color: white;");
+    _colorComboBox->setStyleSheet(
+        "QComboBox#ColorComboBox {"
+        "    background-color: white;"
+        "    selection-background-color: lightgray;"
+        "}"
+        "QComboBox#ColorComboBox QAbstractItemView {"
+        "    background-color: white;"
+        "    selection-background-color: #a0a0a0;"
+        "    selection-color: black;"
+        "    color: black;"
+        "}"
+        "QComboBox#ColorComboBox QAbstractItemView::item:hover {"
+        "    background-color: #e0e0e0;"
+        "}"
+    );
     colorLayout->addWidget(_colorComboBox);
     leftLayout->addLayout(colorLayout);
 
