@@ -109,6 +109,7 @@ void Board::writeData()
         newDataObject["amountChanges"] = 1;
         _jsonObjectArray.append(newDataObject);
         cacheBulletinPaintData(newDataObject, _jsonObjectArray.size()-1);
+        emit userAdded();
         QMessageBox::information(this, "Выполнено!", "Добавлен новый пользователь " + _userName);
         qDebug() << "Добавлен новый пользователь: " << _userName;
     }
@@ -157,6 +158,7 @@ void Board::onClear()
         initNewSplash();
         setNewBulletin(true);
         update();
+        emit userAdded();
         if (QFile::remove(_fileName)) {
              QMessageBox::information(this, "Очистка", "Очистка успешно завершена.");
         }

@@ -36,6 +36,8 @@ private slots:
     void getMyData();
     void onStartOrStopButton();
     void showHelpMessage();
+    void onUserNameSelected(const QString &userName);
+    void userEditUpdate();
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -51,7 +53,7 @@ private://members
     QMenu       *_helpMenu;
     QAction     *_aboutAction;
     Board       *_board;
-    QLineEdit   *_userNameEdit;
+    QComboBox   *_userNameEdit;
     QComboBox   *_fontComboBox;
     QComboBox   *_colorComboBox;
     QLineEdit   *_fontSizeEdit;

@@ -6,6 +6,7 @@
 #include <QDateTime>
 #include <QMutex>
 #include <QMutexLocker>
+#include <QCompleter>
 
 const QString SETTINGS_FILE = "bulletins.json";
 
@@ -140,10 +141,27 @@ void MainWindow::setupUi()
     // left-1. Поле ввода имени пользователя
     QHBoxLayout *userLayout = new QHBoxLayout();
     userLayout->addWidget(new QLabel("Имя пользователя:", this));
-    _userNameEdit = new QLineEdit("Гость", this);
+    _userNameEdit = new QComboBox(/*"Гость",*/ this);
     _userNameEdit->setObjectName("UserNameEdit");
-    _userNameEdit->setStyleSheet("background-color: white;");
-    _userNameEdit->installEventFilter(this);
+    _userNameEdit->setStyleSheet(
+        "QComboBox#ColorComboBox {"
+        "    background-color: white;"
+        "    selection-background-color: lightgray;"
+        "}"
+        "QComboBox#ColorComboBox QAbstractItemView {"
+        "    background-color: white;"
+        "    selection-background-color: #a0a0a0;"
+        "    selection-color: black;"
+        "    color: black;"
+        "}"
+        "QComboBox#ColorComboBox QAbstractItemView::item:hover {"
+        "    background-color: #e0e0e0;"
+        "}"
+    );
+    _userNameEdit->setEditable(true);
+    userEditUpdate();
+    // Включаем автодополнение с фильтрацией по префиксу (искать совпадения)
+    _userNameEdit->setCompleter(new QCompleter(_userNameEdit));
     userLayout->addWidget(_userNameEdit);
     leftLayout->addLayout(userLayout);
 
@@ -314,10 +332,45 @@ void MainWindow::setupUi()
     connect(_board, &Board::userDataGetted, this, &MainWindow::getMyData);
     connect(_autoUpdateButton, &QPushButton::clicked, this, &MainWindow::onStartOrStopButton);
     connect(_clearButton, &QPushButton::clicked, _board, &Board::onClear);
+    connect(_userNameEdit, QOverload<const QString &>::of(&QComboBox::activated),
+            this, &MainWindow::onUserNameSelected);
+    connect(_board, &Board::userAdded, this, &MainWindow::userEditUpdate);
     _updateThread = new UpdateThread(_board, &_mutex, 1000, this);
     _tasks = new TaskThread(_board, &_mutex, 1000, this);
     connect(_updateThread, &BullThread::iamstop, _board, &Board::onStopThread);
     connect(_tasks, &BullThread::iamstop, _board, &Board::onStopThread);
+}
+
+void MainWindow::userEditUpdate()
+{
+    QString currName = _userNameEdit->currentText();
+    _userNameEdit->clear();// 3. Заполняем комбо-бокс данными (если _board->_jsonArray не пуст)
+    // Предполагается, что _board->_jsonArray уже инициализирован и заполнен
+    if (_board && !_board->_jsonObjectArray.isEmpty()) {
+        for (int i = 0; i < _board->_jsonObjectArray.size(); ++i) {
+            // Проверяем наличие ключа "author" и конвертируем в строку
+            if (_board->_jsonObjectArray[i].isObject()) {
+                QString authorName = _board->_jsonObjectArray[i].toObject()["author"].toString();
+                if (!authorName.isEmpty() && _userNameEdit->findText(authorName) == -1) {
+                    // Добавляем имя, если оно не пустое и еще не в списке (чтобы не было дубликатов)
+                    _userNameEdit->addItem(authorName);
+                }
+            }
+        }
+    }
+
+    if(currName != "") {
+        _userNameEdit->setCurrentText(currName);
+    }
+    else {
+        _userNameEdit->setCurrentText("Гость");
+    }
+    _userNameEdit->update();
+}
+
+void MainWindow::onUserNameSelected(const QString &userName)
+{
+    getMyData();
 }
 
 void MainWindow::onStartOrStopButton()
@@ -441,15 +494,16 @@ void MainWindow::onStartOrStopButton()
         if(needUpdateStat) {
             _updateThread->giveStatistics();
         }
+        userEditUpdate();
     }
     _autoUpdateButton->update();
 }
 
 void MainWindow::updateBulletin()
 {
-    if(_userNameEdit->text() != "" && _bulletinEdit->toPlainText() != "") {
+    if(_userNameEdit->currentText() != "" && _bulletinEdit->toPlainText() != "") {
         _board->setMessage(_bulletinEdit->toPlainText());
-        _board->setUserName(_userNameEdit->text());
+        _board->setUserName(_userNameEdit->currentText());
         _board->setFontName(_fontComboBox->currentText());
         _board->setTextColor(_colorComboBox->currentText());
     
@@ -553,11 +607,11 @@ void MainWindow::updateBulletin()
 void MainWindow::getMyData()
 {
     int id = -1;
-    QJsonObject findObj = _board->findByUser(_userNameEdit->text(), id);
+    QJsonObject findObj = _board->findByUser(_userNameEdit->currentText(), id);
 
     if(id != -1)
     {
-        qDebug()<<"Найден пользователь с именем "<<_userNameEdit->text();
+        qDebug()<<"Найден пользователь с именем "<<_userNameEdit->currentText();
 
         if(findObj.contains("font")) _fontComboBox->setCurrentText(findObj["font"].toString());
         else qWarning("Данные повреждены или не полные! Нет значения для шрифта");

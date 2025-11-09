@@ -79,6 +79,7 @@ public slots:
     void onStopThread(const QString &str);
 signals:
     void userDataGetted();
+    void userAdded();
 protected:
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
