@@ -289,6 +289,10 @@ void MainWindow::setupUi()
     bottomLayout->addWidget(_sendButton);
 
     //bottom-3. Браузер для логов.
+    QLabel *logTitleLabel = new QLabel("Журнал событий / Логи:", this);
+    logTitleLabel->setObjectName("LogTitleLabel");
+    logTitleLabel->setStyleSheet("font-weight: bold; margin-top: 10px;");
+    bottomLayout->addWidget(logTitleLabel); // Добавляем заголовок в
     _logBrowser = new QTextEdit(this);
     _logBrowser->setObjectName("LogBrowser");
     _logBrowser->setReadOnly(true); // Только для чтения
