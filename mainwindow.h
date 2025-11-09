@@ -20,6 +20,8 @@
 #include <QMenu>
 #include <QMenuBar>
 
+const int MAX_CHAR_LIMIT = 300;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -38,6 +40,7 @@ private slots:
     void showHelpMessage();
     void onUserNameSelected(const QString &userName);
     void userEditUpdate();
+    void updateCharCount();
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -63,6 +66,8 @@ private://members
     QLineEdit   *_newMsgRateEdit;
     QLineEdit   *_editMsgRateEdit;
     QTextEdit   *_bulletinEdit;
+    QLabel      *_charCountLabel;       // Label для отображения количества символов
+    QLabel      *_limitWarningLabel;
     QPushButton *_sendButton;
     QPushButton *_autoUpdateButton;
     QPushButton *_clearButton;

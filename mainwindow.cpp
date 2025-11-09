@@ -303,6 +303,25 @@ void MainWindow::setupUi()
     QVBoxLayout *bottomLayout = new QVBoxLayout(bottomContainer);
     //bottom-1. Поле ввода текста сообщения
     bottomLayout->addWidget(new QLabel("Сообщение:", this));
+
+    QHBoxLayout *counterLayout = new QHBoxLayout();
+
+    // Инициализируем счетчик (изначально 0/10)
+    _charCountLabel = new QLabel(QString("0/%1").arg(MAX_CHAR_LIMIT), this);
+    counterLayout->addWidget(_charCountLabel);
+
+    // Инициализируем предупреждение (изначально пустое и скрытое)
+    _limitWarningLabel = new QLabel("", this);
+    _limitWarningLabel->setStyleSheet("color: red; font-weight: bold;");
+    _limitWarningLabel->setVisible(false); // Скрываем по умолчанию
+    counterLayout->addWidget(_limitWarningLabel);
+
+    // Добавляем счетчик и предупреждение справа
+    counterLayout->addStretch(); // Растяжка, чтобы прижать счетчики влево
+
+    // Добавляем этот макет над текстовым полем
+    bottomLayout->addLayout(counterLayout);
+
     _bulletinEdit = new QTextEdit(this);
     _bulletinEdit->setObjectName("BulletinEdit");
     _bulletinEdit->setStyleSheet("background-color: white;");
@@ -340,27 +359,43 @@ void MainWindow::setupUi()
     connect(_board, &Board::userDataGetted, this, &MainWindow::getMyData);
     connect(_autoUpdateButton, &QPushButton::clicked, this, &MainWindow::onStartOrStopButton);
     connect(_clearButton, &QPushButton::clicked, _board, &Board::onClear);
-    connect(_userNameEdit, QOverload<const QString &>::of(&QComboBox::activated),
+    connect(_userNameEdit, QOverload<const QString &>::of(&QComboBox::textActivated),
             this, &MainWindow::onUserNameSelected);
     connect(_board, &Board::userAdded, this, &MainWindow::userEditUpdate);
+    connect(_bulletinEdit, &QTextEdit::textChanged, this, &MainWindow::updateCharCount);
     _updateThread = new UpdateThread(_board, &_mutex, 1000, this);
     _tasks = new TaskThread(_board, &_mutex, 1000, this);
     connect(_updateThread, &BullThread::iamstop, _board, &Board::onStopThread);
     connect(_tasks, &BullThread::iamstop, _board, &Board::onStopThread);
 }
 
+void MainWindow::updateCharCount()
+{
+    int currentLength = _bulletinEdit->toPlainText().length();
+    // Обновляем текст счетчика
+    _charCountLabel->setText(QString("%1/%2").arg(currentLength).arg(MAX_CHAR_LIMIT));
+    // Проверяем условие лимита
+    if (currentLength > MAX_CHAR_LIMIT) {
+        _charCountLabel->setStyleSheet("color: red;");
+        _limitWarningLabel->setText(QString::fromUtf8("Количество символов превышает лимит!"));
+        _limitWarningLabel->setVisible(true);
+    } else {
+        _charCountLabel->setStyleSheet(""); // Сброс стиля (вернуть стандартный цвет)
+        _limitWarningLabel->setVisible(false); // Скрыть предупреждение
+    }
+}
+
+
 void MainWindow::userEditUpdate()
 {
     QString currName = _userNameEdit->currentText();
-    _userNameEdit->clear();// 3. Заполняем комбо-бокс данными (если _board->_jsonArray не пуст)
-    // Предполагается, что _board->_jsonArray уже инициализирован и заполнен
+    _userNameEdit->clear();
+
     if (_board && !_board->_jsonObjectArray.isEmpty()) {
         for (int i = 0; i < _board->_jsonObjectArray.size(); ++i) {
-            // Проверяем наличие ключа "author" и конвертируем в строку
             if (_board->_jsonObjectArray[i].isObject()) {
                 QString authorName = _board->_jsonObjectArray[i].toObject()["author"].toString();
                 if (!authorName.isEmpty() && _userNameEdit->findText(authorName) == -1) {
-                    // Добавляем имя, если оно не пустое и еще не в списке (чтобы не было дубликатов)
                     _userNameEdit->addItem(authorName);
                 }
             }
@@ -522,6 +557,18 @@ void MainWindow::onStartOrStopButton()
 
 void MainWindow::updateBulletin()
 {
+    if(_bulletinEdit->toPlainText().length() > MAX_CHAR_LIMIT) {
+        QMessageBox::critical(this, "Превышен символьный лимит сообщения!", "Пожалуйста, сократите ваше сообщение до 300 символов!");
+        return;
+    }
+
+    if(_userNameEdit->currentText().length() > 20) {
+        QMessageBox::critical(this, "Слишком длинное имя пользователя!", "Имя пользователя составляет " +
+                              QString::number(_userNameEdit->currentText().length()) +
+                              " символов. Пожалуйста, сократите имя пользователя до 20 символов!");
+        return;
+    }
+
     if(_userNameEdit->currentText() != "" && _bulletinEdit->toPlainText() != "") {
         _board->setMessage(_bulletinEdit->toPlainText());
         _board->setUserName(_userNameEdit->currentText());
