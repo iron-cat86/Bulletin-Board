@@ -81,7 +81,7 @@ TEST(MainWindowTestGroup, EventFilterBlocksSendButtonOnFocus) {
     TestableMainWindow w;
     w.resize(1024, 768);
 
-    QLineEdit* userNameEdit = w.findChild<QLineEdit*>("UserNameEdit");
+    QComboBox* userNameEdit = w.findChild<QComboBox*>("UserNameEdit");
     QPushButton* sendButton = w.findChild<QPushButton*>("SendButton");
 
     ASSERT_NE(userNameEdit, nullptr);

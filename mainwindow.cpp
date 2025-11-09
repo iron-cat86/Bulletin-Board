@@ -159,9 +159,17 @@ void MainWindow::setupUi()
         "}"
     );
     _userNameEdit->setEditable(true);
-    userEditUpdate();
+/*    QCompleter *completer = new QCompleter(_userNameEdit);
+    completer->setCompletionMode(QCompleter::InlineCompletion);
     // Включаем автодополнение с фильтрацией по префиксу (искать совпадения)
-    _userNameEdit->setCompleter(new QCompleter(_userNameEdit));
+    completer->setFilterMode(Qt::MatchStartsWith);
+
+    // Опционально: Делаем поиск нечувствительным к регистру (буква "А" найдет "автор")
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+
+    // Устанавливаем QCompleter для комбо-бокса
+    _userNameEdit->setCompleter(completer);*/
+    userEditUpdate();
     userLayout->addWidget(_userNameEdit);
     leftLayout->addLayout(userLayout);
 
@@ -366,6 +374,19 @@ void MainWindow::userEditUpdate()
         _userNameEdit->setCurrentText("Гость");
     }
     _userNameEdit->update();
+    QLineEdit *lineEdit = _userNameEdit->lineEdit();
+
+    if (lineEdit) {
+        QCompleter *completer = new QCompleter(_userNameEdit->model(), this);
+        // Используем модель данных самого комбо-бокса как источник данных для сompleter
+        completer->setModel(_userNameEdit->model());
+        // Настраиваем нужные вам режимы:
+        completer->setFilterMode(Qt::MatchStartsWith); // Только в начале строки
+        completer->setCaseSensitivity(Qt::CaseInsensitive); // Игнорируем регистр
+        completer->setCompletionMode(QCompleter::PopupCompletion); // Показываем как выпадающий список (стандартно)
+        // Привязываем completer напрямую к внутреннему lineEdit
+        lineEdit->setCompleter(completer);
+    }
 }
 
 void MainWindow::onUserNameSelected(const QString &userName)
