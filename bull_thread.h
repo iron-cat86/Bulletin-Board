@@ -41,12 +41,14 @@ public:
     void setMs(int ms) {_ms = ms;}
 protected:
     virtual void run();// override;
-
-//private:
     int        _ms;
     Board     *_board;
     QAtomicInt _quitFlag;
     QMutex    *_mutex;
+    double     _averageIterationTime = 0.;
+    double     _minIterationTime = 100000.;
+    double     _maxIterationTime = 0.;
+    int        _amountIteration=0;
 };
 
 class UpdateThread : public BullThread
@@ -57,6 +59,11 @@ public:
     virtual void stopThread() override;
 protected:
     void run() override;
+private:
+    double      _averageOneupdateTime = 0.;
+    double      _minOneupdateTime = 100000.;
+    double      _maxOneupdateTime = 0.;
+    int         _startAmountBulletins;
 };
 
 class TaskThread : public BullThread
