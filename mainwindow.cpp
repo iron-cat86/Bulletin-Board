@@ -451,41 +451,96 @@ void MainWindow::updateBulletin()
         _board->setMessage(_bulletinEdit->toPlainText());
         _board->setUserName(_userNameEdit->text());
         _board->setFontName(_fontComboBox->currentText());
+        _board->setTextColor(_colorComboBox->currentText());
     
         bool ok;
         int size = _fontSizeEdit->text().toInt(&ok);
     
         if (ok) {
-            _board->setFontSize(size);
+            if(size < 4)
+            {
+                qWarning()<<"Размер шрифта менее 4 не будет читаем. Устанавливаем минимальное значение для шрифта.";
+                _fontSizeEdit->setText("4");
+                size = 4;
+            }
+
+            if(size > 400)
+            {
+                qWarning()<<"Размер шрифта более 400 не войдет на доску. Устанавливаем максиммальное значение для шрифта.";
+                _fontSizeEdit->setText("400");
+                size = 400;
+            }
         }
         else {
-            qWarning()<<"Не удалось получить новый размер для шрифта!";
+            qWarning()<<"Не удалось получить новый размер для шрифта! Устанавливаем размер по умолчанию 12.";
+            _fontSizeEdit->setText("12");
             size = 12;
         }
-        _board->setTextColor(_colorComboBox->currentText());
+        _board->setFontSize(size);
+
         int x = _coordXEdit->text().toInt(&ok);
 
         if(!ok) {
-            qWarning()<<"Не удалось получить новую координату x! x=0";
-            x=0;
+            qWarning()<<"Не удалось получить новую координату x! Устанавливаем x=0";
+            _coordXEdit->setText("0");
+            x = 0;
         }
+        else {
+            if(x < 0) {
+                qWarning()<<"Не желательно сразу устанавливать отрицательную координату для объявления - оно будет Срезано. Устанавливаем координату x=0";
+                _coordXEdit->setText("0");
+                x = 0;
+            }
+
+            if(x > 1800) {
+                qWarning()<<"Не желательно задавать такцую большую координату - объявление уедет вправо. Устанавливаем координату x = 1800";
+                _coordXEdit->setText("1800");
+                x = 1800;
+            }
+        }
+
         int y = _coordYEdit->text().toInt(&ok);
 
         if(!ok) {
-            qWarning()<<"Не удалось получить новую координату y! y=0";
-            y=0;
+            qWarning()<<"Не удалось получить новую координату y! Устанавливаем y=0";
+            _coordYEdit->setText("0");
+            y = 0;
+        }
+        else  {
+            if(y < 0) {
+                qWarning()<<"Не желательно сразу устанавливать отрицательную координату для объявления - оно будет Срезано. Устанавливаем координату y=0";
+                _coordYEdit->setText("0");
+                y = 0;
+            }
+
+            if(y > 500) {
+                qWarning()<<"Не желательно задавать такцую большую координату - объявление уедет вниз. Устанавливаем координату y = 500";
+                _coordYEdit->setText("500");
+                y = 500;
+            }
         }
         _board->setTextCoords(x, y);
 
         double angle = _angleEdit->text().toDouble(&ok);
 
         if (ok) {
-            _board->setTextAngle(angle);
+            if(fabs(angle) > 360.) {
+                qWarning()<<"Не стоит задавать угол более 360 градусов";
+
+                while(fabs(angle) > 360.) {
+                    if(angle >= 0.) angle -= 360.;
+                    else angle += 360.;
+                }
+                _angleEdit->setText(QString::number(angle));
+            }
         }
         else {
-            qWarning()<<"Не удалось получить новый угол поворота!";
+            qWarning()<<"Не удалось получить новый угол поворота! Устанавливаем угол по умолчанию 0 градусов";
             angle = 0.;
+            _angleEdit->setText("0");
         }
+        _board->setTextAngle(angle);
+
         _board->writeData();
     }
     else {

@@ -44,31 +44,37 @@ void UpdateThread::run()
 
     while (_quitFlag.loadRelaxed() == 0) {
         _mutex->lock();
-        QElapsedTimer timer;
-        timer.start();
-        _board->updateBulletin(false);
-        int elapsedMs = timer.elapsed();
-        double elapsedOne = ((double)elapsedMs)/((double)_board->_jsonObjectArray.size());
 
-        _mutex->unlock();
-        ++_amountIteration;
-        _averageIterationTime += (double)elapsedMs;
-        _averageOneupdateTime += elapsedOne;
+        if(_board->_jsonObjectArray.size() > 0) {
+            QElapsedTimer timer;
+            timer.start();
+            _board->updateBulletin(false);
+            int elapsedMs = timer.elapsed();
+            double elapsedOne = ((double)elapsedMs)/((double)_board->_jsonObjectArray.size());
 
-        if((double)elapsedMs < _minIterationTime) {
-            _minIterationTime = (double)elapsedMs;
+            _mutex->unlock();
+            ++_amountIteration;
+            _averageIterationTime += (double)elapsedMs;
+            _averageOneupdateTime += elapsedOne;
+
+            if((double)elapsedMs < _minIterationTime) {
+                _minIterationTime = (double)elapsedMs;
+            }
+
+            if((double)elapsedMs > _maxIterationTime) {
+                _maxIterationTime = (double)elapsedMs;
+            }
+
+            if(elapsedOne < _minOneupdateTime) {
+                _minOneupdateTime = elapsedOne;
+            }
+
+            if(elapsedOne > _maxOneupdateTime) {
+                _maxOneupdateTime = elapsedOne;
+            }
         }
-
-        if((double)elapsedMs > _maxIterationTime) {
-            _maxIterationTime = (double)elapsedMs;
-        }
-
-        if(elapsedOne < _minOneupdateTime) {
-            _minOneupdateTime = elapsedOne;
-        }
-
-        if(elapsedOne > _maxOneupdateTime) {
-            _maxOneupdateTime = elapsedOne;
+        else {
+            _mutex->unlock();
         }
         QThread::msleep(_ms);
     }
@@ -93,10 +99,10 @@ void TaskThread::run()
         QString text = randomBulletins[QRandomGenerator::global()->bounded(20)];
         QString t_font = fam_fonts[QRandomGenerator::global()->bounded(5)];
         QString color = t_colors[QRandomGenerator::global()->bounded(8)];
-        int x = QRandomGenerator::global()->bounded(800);
-        int y = QRandomGenerator::global()->bounded(400);
-        int size = 12 +  QRandomGenerator::global()->bounded(29);
-        double angle = (double)QRandomGenerator::global()->bounded(360);
+        int x = QRandomGenerator::global()->bounded(1800);
+        int y = QRandomGenerator::global()->bounded(500);
+        int size = 4 +  QRandomGenerator::global()->bounded(396);
+        double angle = -360. + (double)QRandomGenerator::global()->bounded(720);
 
         QJsonObject newDataObject;
         newDataObject["author"] = user;
