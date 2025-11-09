@@ -324,52 +324,68 @@ void MainWindow::onStartOrStopButton()
 {
     if(_autoUpdateButton->text() == "Старт авто")
     {
-        _autoUpdateButton->setText("Стоп авто");
-        _userNameEdit->setEnabled(false);
-        _fontComboBox->setEnabled(false);
-        _colorComboBox->setEnabled(false);
-        _coordXEdit->setEnabled(false);
-        _coordYEdit->setEnabled(false);
-        _angleEdit->setEnabled(false);
-        _fontSizeEdit->setEnabled(false);
-        _newMsgRateEdit->setEnabled(false);
-        _editMsgRateEdit->setEnabled(false);
-        _bulletinEdit->setEnabled(false);
-        _clearButton->setEnabled(false);
-        _sendButton->setEnabled(false);
-        _board->setNewBulletin(false);
+        QString quesion = "Вы нажали на кнопку экстримального тестирования приложения! Все сохраненные ранее данные будут изменены!!! Вы уверены, что хотите продолжить?";
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(
+            this,
+            "Подтверждение начала тестирования",
+            quesion,
+            QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel
+        );
 
-         //Обновление
-        QString amountInSecStr = _editMsgRateEdit->text();
+        if (reply == QMessageBox::Yes) {
+            //Обновление
+            QString amountInSecStr = _editMsgRateEdit->text();
 
-        if(amountInSecStr != "") {
-            int amountInSec = amountInSecStr.toInt();
+           if(amountInSecStr != "") {
+                int amountInSec = amountInSecStr.toInt();
 
-            if(amountInSec > 0)
-            {
-                int ms = 1000/amountInSec;
-                _updateThread->setMs(ms);
-                _updateThread->start();
+                if(amountInSec > 0)
+                {
+                    int ms = 1000/amountInSec;
+                    _updateThread->setMs(ms);
+                    _updateThread->start();
+                }
+            }
+
+            //Добавление
+            QString addInSecStr = _newMsgRateEdit->text();
+
+            if(addInSecStr != "") {
+                int addInSec = addInSecStr.toInt();
+
+                if(addInSec > 25) {
+                    qWarning()<<"Максимальная частота добавления новых объявлений не должна превышать 25 объявлений в сеекунду!";
+                    addInSec = 25;
+                    _newMsgRateEdit->setText("25");
+                }
+
+                if(addInSec > 0) {
+                    int newms = 1000/addInSec;
+                    _tasks->setMs(newms);
+                    _tasks->start();
+                }
+            }
+
+            if(_tasks->isRunning() || _updateThread->isRunning()) {
+                _autoUpdateButton->setText("Стоп авто");
+                _userNameEdit->setEnabled(false);
+                _fontComboBox->setEnabled(false);
+                _colorComboBox->setEnabled(false);
+                _coordXEdit->setEnabled(false);
+                _coordYEdit->setEnabled(false);
+                _angleEdit->setEnabled(false);
+                _fontSizeEdit->setEnabled(false);
+                _newMsgRateEdit->setEnabled(false);
+                _editMsgRateEdit->setEnabled(false);
+                _bulletinEdit->setEnabled(false);
+                _clearButton->setEnabled(false);
+                _sendButton->setEnabled(false);
+                _board->setNewBulletin(false);
             }
         }
-
-        //Добавление
-        QString addInSecStr = _newMsgRateEdit->text();
-
-        if(addInSecStr != "") {
-            int addInSec = addInSecStr.toInt();
-
-            if(addInSec > 25) {
-                qWarning()<<"Максимальная частота добавления новых объявлений не должна превышать 25 объявлений в сеекунду!";
-                addInSec = 25;
-                _newMsgRateEdit->setText("25");
-            }
-
-            if(addInSec > 0) {
-                int newms = 1000/addInSec;
-                _tasks->setMs(newms);
-                _tasks->start();
-            }
+        else {
+            QMessageBox::information(this, "Отмена", "Действие отменено пользователем.");
         }
     }
     else
