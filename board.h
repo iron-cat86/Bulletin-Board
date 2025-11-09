@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QList>
 #include <QMutex>
 #include <QRandomGenerator>
 
@@ -73,6 +74,10 @@ public://member
     QList<BulletinPaintData> _bulletinPaintDataList;
     QJsonArray _jsonObjectArray;
     QPixmap _cachePixmap;
+public slots:
+    void onClear();
+signals:
+    void userDataGetted();
 protected:
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;

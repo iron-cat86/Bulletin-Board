@@ -31,18 +31,18 @@ public:
     static void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg);
 signals:
     //пользовательский сигнал
-    void cursorFocused();
+    //void cursorFocused();
     void shown();
 private slots:
     void updateBulletin();
     void getMyData();
-    void blockSendButton();
+  //  void blockSendButton();
     void onStartOrStopButton();
     void showHelpMessage();
 
 protected:
     void closeEvent(QCloseEvent *event) override;
-    bool eventFilter(QObject *obj, QEvent *event) override;
+ //   bool eventFilter(QObject *obj, QEvent *event) override;
     void showEvent(QShowEvent *event) override;
 
 private://functions
@@ -67,7 +67,7 @@ private://members
     QTextEdit   *_bulletinEdit;
     QPushButton *_sendButton;
     QPushButton *_autoUpdateButton;
-    QPushButton *_getMyDataButton;
+    QPushButton *_clearButton;
     QWidget     *_centralWidget;
     QGridLayout *_mainLayout;
     // Threads

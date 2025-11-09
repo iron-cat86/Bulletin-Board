@@ -266,11 +266,11 @@ void MainWindow::setupUi()
     // Кнопка займет всю ширину
     rightLayout->addWidget(_autoUpdateButton);
 
-    // right-5. Кнопка "Получить мои данные".
-    _getMyDataButton = new QPushButton("Получить мои данные", this);
-    _getMyDataButton->setObjectName("GetMyDataButton");
+    // right-5. Кнопка "Очистить".
+    _clearButton = new QPushButton("Очистить данные", this);
+    _clearButton->setObjectName("ClearButton");
     // Кнопка займет всю ширину
-    rightLayout->addWidget(_getMyDataButton);
+    rightLayout->addWidget(_clearButton);
 
     QWidget *bottomContainer = new QWidget(this);
     bottomContainer->setStyleSheet("background-color: lightgray;");
@@ -285,7 +285,7 @@ void MainWindow::setupUi()
     // bottom-2. Кнопка «Отправить сообщение»
     _sendButton = new QPushButton("Отправить сообщение", this);
     _sendButton->setObjectName("SendButton");
-    _sendButton->setEnabled(false);
+    _sendButton->setEnabled(true);
     bottomLayout->addWidget(_sendButton);
 
     //bottom-3. Браузер для логов.
@@ -307,26 +307,11 @@ void MainWindow::setupUi()
     setWindowTitle("Доска объявлений");
 
     connect(_sendButton, &QPushButton::clicked, this, &MainWindow::updateBulletin);
-    connect(_getMyDataButton, &QPushButton::clicked, this, &MainWindow::getMyData);
-    connect(_userNameEdit, &QLineEdit::selectionChanged, this, &MainWindow::blockSendButton);
-    connect(this, &MainWindow::cursorFocused, this, &MainWindow::blockSendButton);
+    connect(_board, &Board::userDataGetted, this, &MainWindow::getMyData);
     connect(_autoUpdateButton, &QPushButton::clicked, this, &MainWindow::onStartOrStopButton);
-
+    connect(_clearButton, &QPushButton::clicked, _board, &Board::onClear);
     _updateThread = new UpdateThread(_board, &_mutex, 1000, this);
     _tasks = new TaskThread(_board, &_mutex, 1000, this);
-}
-
-bool MainWindow::eventFilter(QObject *obj, QEvent *event)
-{
-    if (obj == _userNameEdit && event->type() == QEvent::FocusIn)
-    {
-        emit cursorFocused();
-        qDebug() << "Курсор установлен в поле редактирования имени пользователя!\n"
-                  <<"Для безопасности сохранения данных возможность изменить их отключена.\n"
-                  <<"Чтобы вернуться к редактированию, нажмите кнопку \"Получить мои данные\"";
-        return false;
-    }
-    return QMainWindow::eventFilter(obj, event);
 }
 
 void MainWindow::onStartOrStopButton()
@@ -344,7 +329,7 @@ void MainWindow::onStartOrStopButton()
         _newMsgRateEdit->setEnabled(false);
         _editMsgRateEdit->setEnabled(false);
         _bulletinEdit->setEnabled(false);
-        _getMyDataButton->setEnabled(false);
+        _clearButton->setEnabled(false);
         _sendButton->setEnabled(false);
         _board->setNewBulletin(false);
 
@@ -394,18 +379,12 @@ void MainWindow::onStartOrStopButton()
         _newMsgRateEdit->setEnabled(true);
         _editMsgRateEdit->setEnabled(true);
         _bulletinEdit->setEnabled(true);
-        _getMyDataButton->setEnabled(true);
+        _clearButton->setEnabled(true);
+        _sendButton->setEnabled(true);
         _tasks->stopThread();
         _updateThread->stopThread();
     }
     _autoUpdateButton->update();
-}
-
-void MainWindow::blockSendButton()
-{
-    _sendButton->setText("Отправить сообщение");
-    _sendButton->setEnabled(false);
-    _sendButton->update();
 }
 
 void MainWindow::updateBulletin()
@@ -450,23 +429,16 @@ void MainWindow::updateBulletin()
             angle = 0.;
         }
         _board->writeData();
-        _sendButton->setText("Редактировать");
-        _sendButton->update();
     }
     else {
         qErrnoWarning("Введите не пустое имя пользователя и не пустое объявление! Данные не определены.");
         QMessageBox::information(this, "Вы не ввели одно или оба критически важных полея!", "Имя пользователя и текст объявления не должны быть пустыми");
-                    return;
+        return;
     }
 }
 
 void MainWindow::getMyData()
 {
-    if(_userNameEdit->text() == "")
-    {
-        qErrnoWarning("Введите имя пользователя!");
-        return;
-    }
     int id = -1;
     QJsonObject findObj = _board->findByUser(_userNameEdit->text(), id);
 
@@ -494,15 +466,7 @@ void MainWindow::getMyData()
 
         if(findObj.contains("text")) _bulletinEdit->setText(findObj["text"].toString());
         else qWarning("Данные повреждены или не полные! Нет вашего объявления");
-
-        _sendButton->setText("Редактировать");
     }
-    else {
-        qWarning()<<"Пользователь с именем "<<_userNameEdit->text()<<" не найден!";
-        _sendButton->setText("Отправить сообщение");
-    }
-    _sendButton->setEnabled(true);
-    _sendButton->update();
 }
 
 void MainWindow::showEvent(QShowEvent *event)

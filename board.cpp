@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QFontMetrics>
 #include <QFile>
+#include <QMessageBox>
 
 Board::Board(const QString &fileName, QMutex* mutex, QWidget *parent)
     : QWidget(parent), _x(10), _y(20), _angle(0.0), _fileName(fileName), _mutex(mutex)
@@ -102,16 +103,65 @@ void Board::writeData()
 
     //Ищем запись по ключу "author" и обновляем ее
     int id = -1;
-    QJsonObject updatedObject = findByUser(_userName, id, newDataObject, true);
+    QJsonObject updatedObject = findByUser(_userName, id, newDataObject);
 
     if(id == -1) {
         _jsonObjectArray.append(newDataObject);
         cacheBulletinPaintData(newDataObject, _jsonObjectArray.size()-1);
+        QMessageBox::information(this, "Выполнено!", "Добавлен новый пользователь " + _userName);
         qDebug() << "Добавлен новый пользователь: " << _userName;
     }
     else {
-        cacheBulletinPaintData(newDataObject, id);
-        qDebug()<< "Обновлены данные для пользователя "<< _userName;
+        QString quesion ="Найдены данные с именем пользователя " +_userName + ". Вы уверены, что хотите перезаписать эти данные?";
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(
+            this,
+            "Подтверждение перезаписи",
+            quesion,
+            QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel
+        );
+
+        if (reply == QMessageBox::Yes) {
+            qDebug() << "Пользователь нажал ДА.";
+            _jsonObjectArray.replace(id, newDataObject);
+            cacheBulletinPaintData(newDataObject, id);
+            qDebug()<< "Обновлены данные для пользователя "<< _userName;
+            QMessageBox::information(this, "Выполнено!", "Обновлены данные для пользователя " + _userName);
+        } else {
+            qDebug() << "Пользователь нажал НЕТ или ОТМЕНА.";
+            QMessageBox::information(this, "Отмена", "Действие отменено пользователем.");
+            emit userDataGetted();
+        }
+    }
+}
+
+void Board::onClear()
+{
+    QString quesion = "Вы нажали на кнопку очистки Данных! Все сохраненные ранее данные будут уничтожены!!! Вы уверены, что хотите это сделать?";
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(
+        this,
+        "Подтверждение очистки",
+        quesion,
+        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel
+    );
+
+    if (reply == QMessageBox::Yes) {
+        qDebug() << "Пользователь нажал ДА.";
+        _jsonObjectArray = {};
+        _bulletinPaintDataList.clear();
+        initNewSplash();
+        setNewBulletin(true);
+        update();
+        if (QFile::remove(_fileName)) {
+             QMessageBox::information(this, "Очистка", "Очистка успешно завершена.");
+        }
+        else {
+            QMessageBox::warning(this, "Ошибка при удалении файла", "Что-то пошло не так. Файл с данными не был удален. (Возможно, его удалили ранее).");
+        }
+    } else {
+        qDebug() << "Пользователь нажал НЕТ или ОТМЕНА.";
+        QMessageBox::information(this, "Отмена", "Действие отменено пользователем.");
     }
 }
 
