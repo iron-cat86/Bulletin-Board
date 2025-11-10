@@ -66,10 +66,10 @@ public:
     void updateCache(bool random_mode=false);
     void drawOneBulletin(BulletinPaintData data, QPainter &painter);
     void setNewBulletin(bool newBulletin) {_newBulletin = newBulletin;}
-    BulletinPaintData createNewPaintData(QJsonObject &obj);
+    virtual BulletinPaintData createNewPaintData(QJsonObject &obj);//virtual для тестирования
     bool findAndUpdatePaintData(QString user, BulletinPaintData &data);
     void initNewSplash();
-    void updateBulletin(bool newBul);
+    virtual void updateBulletin(bool newBul);//virtual для тестирования
 public://member
     QList<BulletinPaintData> _bulletinPaintDataList;
     QJsonArray _jsonObjectArray;

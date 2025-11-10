@@ -40,6 +40,10 @@ public:
     void setMs(int ms) {_ms = ms;}
     virtual void stopThread();
     virtual void giveStatistics();
+    double     _averageIterationTime = 0.;
+    double     _minIterationTime = 100000.;
+    double     _maxIterationTime = 0.;
+    int        _amountIteration=0;
 signals:
     void iamstop(const QString &str);
 protected:
@@ -48,10 +52,7 @@ protected:
     Board     *_board;
     QAtomicInt _quitFlag;
     QMutex    *_mutex;
-    double     _averageIterationTime = 0.;
-    double     _minIterationTime = 100000.;
-    double     _maxIterationTime = 0.;
-    int        _amountIteration=0;
+
 };
 
 class UpdateThread : public BullThread

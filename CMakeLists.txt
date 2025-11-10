@@ -15,8 +15,6 @@ add_executable(bulletinApp
     mainwindow.cpp
     board.cpp
     bull_thread.cpp
-    #task_thread.cpp
-    #task_thread.h
     mainwindow.h 
     board.h
     bull_thread.h
@@ -35,13 +33,11 @@ set(TEST_SOURCES
     mainwindow.cpp
     board.cpp
     bull_thread.cpp
-   # task_thread.cpp
-   # task_thread.h
     board.h
     bull_thread.h
     mainwindow.h
 )
-
+find_package(GTest CONFIG REQUIRED)
 # 3. Создаем новый исполняемый файл для тестов
 add_executable(bulletinApp_tests ${TEST_SOURCES})
 
@@ -54,6 +50,7 @@ target_link_libraries(bulletinApp_tests PRIVATE
     Qt5::Test
     GTest::gtest
     GTest::gtest_main
+   # GTest::gmock_main
 )
 
 # Включаем автоматический запуск тестов при выполнении 'make test'

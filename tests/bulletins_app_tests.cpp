@@ -1,11 +1,13 @@
 #include "gtest/gtest.h"
-#include "../mainwindow.h" // Подключаем ваш класс MainWindow
-#include <QApplication> // Нужно для инициализации Qt
-// Мы используем QSignalSpy для проверки соединений сигналов/слотов
+#include "../mainwindow.h"
+#include <QApplication>
+#include <QtTest/QTest>
 #include <QtTest/QSignalSpy>
-// Мы используем QTestEventLoop для имитации работы цикла событий Qt во время теста
 #include <QtTest/QTestEventLoop>
 #include <QTimer>
+#include <QObject>
+#include <QCoreApplication>
+#include "../board.h"
 
 class TestableMainWindow : public MainWindow {
 public:
@@ -17,14 +19,34 @@ public:
     }
 };
 
-class TestableBoard : public Board {
+class BoardStub : public Board {
+    //Q_OBJECT
 public:
-    using Board::Board;
-    // ... можно добавить геттеры, если _jsonObjectArray приватный ...
+    BoardStub() : Board("bulletins.json", nullptr, nullptr) {
+            // Если Board() требует реальный QMutex*, нужно создать его здесь
+        }
+    void updateBulletin(bool update) override {
+        // Ничего не делаем, просто считаем вызовы
+        callCount++;
+    }
+
+    BulletinPaintData createNewPaintData(QJsonObject& obj) override {
+        // Возвращаем пустую структуру
+        return BulletinPaintData();
+    }
+
+    int callCount = 0;
+};
+
+class ThreadTest : public ::testing::Test {
+protected:
+    QMutex mutex;
+    BoardStub board;
+    int testMs = 10;
 };
 
 TEST(MainWindowTestGroup, MenuCreationAndHelpMessage) {
-    MainWindow w;
+    TestableMainWindow w;
 
     ASSERT_NE(w.menuBar(), nullptr); // Проверяем наличие menuBar
     QMenu* helpMenu = w.menuBar()->findChild<QMenu*>("HelpMenu");
@@ -111,23 +133,23 @@ TEST(BoardTestGroup, ReadDataFromFile) {
     ASSERT_TRUE(file.open(QIODevice::WriteOnly | QIODevice::Text));
     QString testJson = R"({
         "messages": [
-            {"author": "Anna", "text": "Hello", "font": "Arial", "size": 12, "left": 10, "top": 20, "angle": 0.0},
-            {"author": "Bob", "text": "World", "font": "Verdana", "size": 14, "left": 800, "top": 50, "angle": 10.0},
-            {"author": "Joan", "text": "Hi!", "font": "Verdana", "size": 40, "left": 100, "top": 100, "angle": 0.0},
-            {"author": "Jeem", "text": "I'm blue", "font": "Verdana", "size": 50, "left": 700, "top": 1000, "angle": 0.0},
-            {"author": "James", "text": "I near", "font": "Verdana", "size": 30, "left": 100, "top": 20, "angle": 90.0},
-            {"author": "Stiv", "text": "Hear you are?", "font": "Verdana", "size": 25, "left": 600, "top": 25, "angle": 45.0},
-            {"author": "Liv", "text": "I feel you", "font": "Verdana", "size": 60, "left": 500, "top": 10, "angle": 30.0},
-            {"author": "Bred", "text": "I see you", "font": "Verdana", "size": 40, "left": 400, "top": 11, "angle": 20.0},
-            {"author": "Alex", "text": "Good Morning!", "font": "Verdana", "size": 30, "left": 200, "top": 7, "angle": 16.0},
-            {"author": "Stiven", "text": "Good by!", "font": "Verdana", "size": 20, "left": 100, "top": 50, "angle": 15.0}
+            {"author": "Anna", "text": "Hello", "font": "Arial", "size": 12, "left": 10, "top": 20, "angle": 0.0, "amountChanges": 1},
+            {"author": "Bob", "text": "World", "font": "Verdana", "size": 14, "left": 800, "top": 50, "angle": 10.0, "amountChanges": 1},
+            {"author": "Joan", "text": "Hi!", "font": "Verdana", "size": 40, "left": 100, "top": 100, "angle": 0.0, "amountChanges": 1},
+            {"author": "Jeem", "text": "I'm blue", "font": "Verdana", "size": 50, "left": 700, "top": 1000, "angle": 0.0, "amountChanges": 1},
+            {"author": "James", "text": "I near", "font": "Verdana", "size": 30, "left": 100, "top": 20, "angle": 90.0, "amountChanges": 1},
+            {"author": "Stiv", "text": "Hear you are?", "font": "Verdana", "size": 25, "left": 600, "top": 25, "angle": 45.0, "amountChanges": 1},
+            {"author": "Liv", "text": "I feel you", "font": "Verdana", "size": 60, "left": 500, "top": 10, "angle": 30.0, "amountChanges": 1},
+            {"author": "Bred", "text": "I see you", "font": "Verdana", "size": 40, "left": 400, "top": 11, "angle": 20.0, "amountChanges": 1},
+            {"author": "Alex", "text": "Good Morning!", "font": "Verdana", "size": 30, "left": 200, "top": 7, "angle": 16.0, "amountChanges": 1},
+            {"author": "Stiven", "text": "Good by!", "font": "Verdana", "size": 20, "left": 100, "top": 50, "angle": 15.0, "amountChanges": 1}
         ]
     })";
     file.write(testJson.toUtf8());
     file.close();
 
     QMutex mutex;
-    TestableBoard board(testFileName, &mutex);
+    Board board(testFileName, &mutex);
 
     ASSERT_FALSE(board._jsonObjectArray.isEmpty());
     ASSERT_EQ(board._jsonObjectArray.size(), 10);
@@ -145,14 +167,14 @@ TEST(BoardTestGroup, FindByUser) {
     ASSERT_TRUE(file.open(QIODevice::WriteOnly | QIODevice::Text));
     QString testJson = R"({
         "messages": [
-            {"author": "Anna", "text": "Hello", "font": "Arial", "size": 12, "left": 10, "top": 20, "angle": 0.0},
-            {"author": "Bob", "text": "World", "font": "Verdana", "size": 14, "left": 100, "top": 50, "angle": 10.0}
+            {"author": "Anna", "text": "Hello", "font": "Arial", "size": 12, "left": 10, "top": 20, "angle": 0.0, "amountChanges": 1},
+            {"author": "Bob", "text": "World", "font": "Verdana", "size": 14, "left": 100, "top": 50, "angle": 10.0, "amountChanges": 1}
         ]
     })";
     file.write(testJson.toUtf8());
     file.close();
     QMutex mutex;
-    TestableBoard board(testFileName, &mutex);
+    Board board(testFileName, &mutex);
     int id = -1;
     QJsonObject foundObj = board.findByUser("Bob", id);
 
@@ -172,7 +194,7 @@ TEST(BoardTestGroup, WriteDataAddsNewUser) {
     const QString testFileName = "test_data_write_new.json";
     QFile::remove(testFileName);
     QMutex mutex;
-    TestableBoard board(testFileName, &mutex);
+    Board board(testFileName, &mutex);
     int initialSize = board._jsonObjectArray.size();
 
     board.setUserName("NewUser");
@@ -183,6 +205,65 @@ TEST(BoardTestGroup, WriteDataAddsNewUser) {
     ASSERT_EQ(board._jsonObjectArray.last().toObject()["author"].toString(), "NewUser");
 
     QFile::remove(testFileName);
+}
+
+TEST_F(ThreadTest, UpdateThread_StopsGracefullyAndSignals) {
+    UpdateThread updateThread(&board, &mutex, testMs, nullptr);
+    QSignalSpy spy(&updateThread, SIGNAL(iamstop(QString)));
+    board.callCount = 0; // Сбрасываем счетчик вызовов
+    QJsonObject newobj;
+    newobj["author"] = "Anna";
+    newobj["text"] = "Hello";
+    newobj["font"] = "Arial";
+    newobj["size"] = 12;
+    newobj["left"] = 10;
+    newobj["top"] = 20;
+    newobj["angle"] = 0.0;
+    newobj["amountChanges"] = 1;
+    board._jsonObjectArray.append(newobj);
+    updateThread.start();
+    ASSERT_TRUE(updateThread.isRunning());
+    // Ждем достаточно, чтобы произошло несколько итераций
+    QTest::qWait(200);
+    // Останавливаем поток и ждем его завершения
+    updateThread.stopThread();
+    updateThread.wait();
+
+    ASSERT_FALSE(updateThread.isRunning());
+    // Проверяем, что метод updateBulletin был вызван
+    ASSERT_FALSE(board.callCount== 0);
+    // Вызываем финальную статистику
+    updateThread.giveStatistics();
+    // Проверяем, что сигнал iamstop был испущен 1 раз
+    ASSERT_EQ(spy.count(), 1);
+    QString statsMessage = spy.takeFirst().at(0).toString();
+    // Проверяем, что сообщение содержит ожидаемый текст (используя u8 или fromUtf8)
+    QByteArray expectedBytes("Объявления обновлялись");
+    ASSERT_TRUE(statsMessage.contains(QString::fromUtf8(expectedBytes)));
+    ASSERT_GT(updateThread._amountIteration, 0);
+}
+
+// --- Тестирование TaskThread ---
+TEST_F(ThreadTest, TaskThread_StopsGracefullyAndSignals) {
+    TaskThread taskThread(&board, &mutex, testMs, nullptr);
+    QSignalSpy spy(&taskThread, SIGNAL(iamstop(QString)));
+    board.callCount = 0; // Сбрасываем счетчик вызовов
+    taskThread.start();
+    ASSERT_TRUE(taskThread.isRunning());
+    QTest::qWait(200);
+    taskThread.stopThread();
+    taskThread.wait();
+
+    ASSERT_FALSE(taskThread.isRunning());
+    // Проверяем, что метод updateBulletin был вызван
+    ASSERT_GT(board.callCount, 0);
+    // Вызываем финальную статистику
+    taskThread.giveStatistics();
+
+    ASSERT_EQ(spy.count(), 1);
+    QString statsMessage = spy.takeFirst().at(0).toString();
+    ASSERT_TRUE(statsMessage.contains(QString::fromUtf8("Авто добавление остановлено")));
+    ASSERT_GT(taskThread._amountIteration, 0);
 }
 
 int main(int argc, char **argv) {

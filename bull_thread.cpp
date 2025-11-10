@@ -154,7 +154,7 @@ void UpdateThread::giveStatistics()
     _averageOneupdateTime/=(double)_amountIteration;
     QString answ;
     QTextStream qtext(&answ);
-    qtext<<QString::fromUtf8("Обявления обновлялись ")<<_amountIteration
+    qtext<<QString::fromUtf8("Объявления обновлялись ")<<_amountIteration
          <<QString::fromUtf8(" раз. На данный момент накоплено ")<<_board->_bulletinPaintDataList.size()
          <<QString::fromUtf8(" объявлений. (Было ")<<_startAmountBulletins
          <<QString::fromUtf8(" объявлений к моменту старта). \nМинимальное время одного обновления составляет ")<<_minIterationTime
